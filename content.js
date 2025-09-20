@@ -920,6 +920,8 @@ function processItemPage() {
           }
         }
       });
+    }
+  }
 }
 
 
