@@ -788,7 +788,7 @@ function processItemPage() {
     const ebayTotal = Number(costs?.total) || 0;
 
     if (!isNaN(pcCostNum)) {
-      const color = getColorGradient(ebayTotal, pcCostNum);
+      const color = getColorGradient(1000, pcCostNum);
 
       let priceTag = itemContainer.querySelector(".pokeprice-tag");
       if (!priceTag) {
