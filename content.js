@@ -788,7 +788,7 @@ function processItemPage() {
     const ebayTotal = Number(costs?.total) || 0;
 
     if (!isNaN(pcCostNum)) {
-      const color = getColorGradient(1000, pcCostNum);
+      const color = getColorGradient(ebayTotal, pcCostNum);
 
       let priceTag = itemContainer.querySelector(".pokeprice-tag");
       if (!priceTag) {
@@ -889,7 +889,7 @@ function extractItemPageCosts() {
     const priceMatches = priceText.match(/\$([0-9,]+\.?[0-9]*)/g);
     if (priceMatches) {
       const prices = priceMatches.map(p => parseFloat(p.replace(/[^0-9.]/g, "")));
-      costs.price = Math.min(...prices);
+      costs.price = Math.max(...prices);
     }
   } else {
     console.log("[PokePrice] No price element found");
