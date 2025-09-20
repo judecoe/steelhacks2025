@@ -756,49 +756,46 @@ function processItemPage() {
     document.querySelector(".notranslate") ||
     document.body;
 
-  if (mainContent) {
-    mainContent.appendChild(itemContainer);
+  if (!mainContent) return;
 
-    const titleElement =
-      document.querySelector("#x-title-label-lbl") ||
-      document.querySelector("h1[id*='title']") ||
-      document.querySelector("h1");
+  mainContent.appendChild(itemContainer);
 
-    if (titleElement) {
-      const title = titleElement.textContent.trim();
+  const titleElement =
+    document.querySelector("#x-title-label-lbl") ||
+    document.querySelector("h1[id*='title']") ||
+    document.querySelector("h1");
 
-      createPriceTag(itemContainer, null, true);
-      createCostBreakdownBox(itemContainer, null, true);
+  if (!titleElement) return;
 
-      const costs = extractItemPageCosts();
-      createCostBreakdownBox(itemContainer, costs, false);
+  const title = titleElement.textContent.trim();
 
-      // --- Fetch raw PC cost from background.js ---
-      chrome.runtime.sendMessage(
-        { title, year: null, originalTitle: null },
-        (response) => {
-          if (chrome.runtime.lastError) {
-            return;
-          }
+  // --- costs ---
+  const costs = extractItemPageCosts();
+  if (costs) {
+    createCostBreakdownBox(itemContainer, costs, false);
+  }
 
-          const pcCostNum = response && response.price ? parseFloat(response.price) : NaN;
-          const ebayTotal = Number(costs.total) || 0;
+  // --- PC cost fetch ---
+  chrome.runtime.sendMessage({ title, year: null, originalTitle: null }, (response) => {
+    if (chrome.runtime.lastError) return;
 
-          if (pcCostNum && !isNaN(pcCostNum)) {
-            const color = getColorGradient(ebayTotal, pcCostNum);
+    const pcCostNum = response?.price ? parseFloat(response.price) : NaN;
+    const ebayTotal = Number(costs?.total) || 0;
 
-            let priceTag = listing.querySelector(".pokeprice-tag");
-            if (!priceTag) {
-              createPriceTag(listing, null, true);
-              priceTag = listing.querySelector(".pokeprice-tag");
-            }
+    if (!isNaN(pcCostNum)) {
+      const color = getColorGradient(ebayTotal, pcCostNum);
 
-            priceTag.style.background = color;
-            priceTag.style.color = "white"; // keep text readable
-            createPriceTag(listing, pcCostNum, false);
-          }
-        }
-      );
+      let priceTag = itemContainer.querySelector(".pokeprice-tag");
+      if (!priceTag) {
+        createPriceTag(itemContainer, null, true);
+        priceTag = itemContainer.querySelector(".pokeprice-tag");
+      }
+
+      priceTag.style.background = color;
+      priceTag.style.color = "white";
+      createPriceTag(itemContainer, pcCostNum, false);
+    }
+  });
 
       const yearMatch = title.match(/\d{4}/);
       const year = yearMatch ? yearMatch[0] : null;
