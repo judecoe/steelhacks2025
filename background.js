@@ -360,6 +360,15 @@ async function fetchPriceFromPriceChartingAPI(title, retryCount = 0) {
     url.replace(CONFIG.PRICECHARTING_API_KEY, "***KEY***")
   );
   console.log("[PokePrice] Searching for:", title);
+
+  // Special debugging for Charizard cards
+  if (title.toLowerCase().includes("charizard")) {
+    console.log("[PokePrice] *** CHARIZARD DEBUGGING ENABLED ***");
+    console.log(
+      "[PokePrice] This is a Charizard search - expect $113.75 for Paldean Fates PSA 10"
+    );
+  }
+
   if (retryCount > 0) {
     console.log("[PokePrice] Retry attempt:", retryCount);
   }
@@ -456,7 +465,7 @@ async function fetchPriceFromPriceChartingAPI(title, retryCount = 0) {
     ) {
       console.log("[PokePrice] Found", data.products.length, "products");
 
-      // Log all products for debugging with correct field names - reduced logging
+      // Log all products for debugging with correct field names - enhanced for Charizard debugging
       console.log("[PokePrice] ===== API RESULTS DEBUG =====");
       console.log(
         "[PokePrice] Found",
@@ -466,12 +475,17 @@ async function fetchPriceFromPriceChartingAPI(title, retryCount = 0) {
       );
 
       data.products.forEach((product, index) => {
-        // Only log first 3 products to avoid spam
-        if (index < 3) {
+        // Log more products for Charizard debugging
+        if (index < 5) {
           console.log(`[PokePrice] Product ${index}:`, {
             name: product["product-name"] || "NO_NAME",
             console: product["console-name"] || "NO_CONSOLE",
             id: product.id,
+            psa10: (product["manual-only-price"] || 0) / 100,
+            bgs10: (product["bgs-10-price"] || 0) / 100,
+            graded9: (product["graded-price"] || 0) / 100,
+            graded8: (product["new-price"] || 0) / 100,
+            ungraded: (product["loose-price"] || 0) / 100,
             topPrice:
               Math.max(
                 product["manual-only-price"] || 0, // PSA 10
@@ -488,16 +502,51 @@ async function fetchPriceFromPriceChartingAPI(title, retryCount = 0) {
       // First, try to find exact PSA 10 matches with correct field names
       let psa10Product = data.products.find((product) => {
         const name = product["product-name"] || "";
+        const lowerName = name.toLowerCase();
         return (
-          name.toLowerCase().includes("psa 10") ||
-          name.toLowerCase().includes("psa grade 10")
+          lowerName.includes("psa 10") ||
+          lowerName.includes("psa grade 10") ||
+          lowerName.includes("psa-10")
         );
       });
 
       console.log(
-        "[PokePrice] PSA 10 match:",
+        "[PokePrice] PSA 10 exact match:",
         psa10Product?.["product-name"] || "None"
       );
+
+      // If no exact PSA 10 match, look for products that contain key terms from our search
+      if (!psa10Product && title.toLowerCase().includes("charizard")) {
+        console.log("[PokePrice] Searching for Charizard-specific matches...");
+
+        // Look for products that match Charizard and Paldean Fates
+        psa10Product = data.products.find((product) => {
+          const name = product["product-name"] || "";
+          const lowerName = name.toLowerCase();
+          return (
+            lowerName.includes("charizard") && lowerName.includes("paldean")
+          );
+        });
+
+        console.log(
+          "[PokePrice] Charizard Paldean match:",
+          psa10Product?.["product-name"] || "None"
+        );
+
+        // If still no match, just look for Charizard
+        if (!psa10Product) {
+          psa10Product = data.products.find((product) => {
+            const name = product["product-name"] || "";
+            const lowerName = name.toLowerCase();
+            return lowerName.includes("charizard");
+          });
+
+          console.log(
+            "[PokePrice] General Charizard match:",
+            psa10Product?.["product-name"] || "None"
+          );
+        }
+      }
 
       // If no exact PSA 10 match, look for graded cards
       if (!psa10Product) {
@@ -525,9 +574,27 @@ async function fetchPriceFromPriceChartingAPI(title, retryCount = 0) {
 
       // Return the highest available price with correct field names and priority
       if (psa10Product) {
-        // For Pokemon cards, prioritize high-grade prices (PSA 10, BGS 10, etc.)
-        const prices = [
-          psa10Product["manual-only-price"], // PSA 10 for cards
+        // ALWAYS prioritize PSA 10 price if available (extension default behavior)
+        if (
+          psa10Product["manual-only-price"] &&
+          psa10Product["manual-only-price"] > 0
+        ) {
+          const psa10Price = (psa10Product["manual-only-price"] / 100).toFixed(
+            2
+          );
+          console.log(
+            "[PokePrice] Found PSA 10 price (extension default):",
+            psa10Price
+          );
+          console.log(
+            "[PokePrice] Selected product:",
+            psa10Product["product-name"]
+          );
+          return psa10Price;
+        }
+
+        // If no PSA 10 price available, fall back to other high-grade prices
+        const fallbackPrices = [
           psa10Product["bgs-10-price"], // BGS 10
           psa10Product["condition-17-price"], // CGC 10
           psa10Product["condition-18-price"], // SGC 10
@@ -548,14 +615,59 @@ async function fetchPriceFromPriceChartingAPI(title, retryCount = 0) {
           ungraded: psa10Product["loose-price"],
         });
 
-        if (prices.length > 0) {
-          // For cards, we want the highest grade price available
-          const maxPriceCents = Math.max(...prices);
-          const maxPrice = (maxPriceCents / 100).toFixed(2); // Convert cents to dollars
-          console.log("[PokePrice] Returning max price:", maxPrice);
+        console.log("[PokePrice] All available prices (in dollars):", {
+          psa10: psa10Product["manual-only-price"]
+            ? (psa10Product["manual-only-price"] / 100).toFixed(2)
+            : null,
+          bgs10: psa10Product["bgs-10-price"]
+            ? (psa10Product["bgs-10-price"] / 100).toFixed(2)
+            : null,
+          cgc10: psa10Product["condition-17-price"]
+            ? (psa10Product["condition-17-price"] / 100).toFixed(2)
+            : null,
+          sgc10: psa10Product["condition-18-price"]
+            ? (psa10Product["condition-18-price"] / 100).toFixed(2)
+            : null,
+          graded9: psa10Product["graded-price"]
+            ? (psa10Product["graded-price"] / 100).toFixed(2)
+            : null,
+          graded8: psa10Product["new-price"]
+            ? (psa10Product["new-price"] / 100).toFixed(2)
+            : null,
+          graded7: psa10Product["cib-price"]
+            ? (psa10Product["cib-price"] / 100).toFixed(2)
+            : null,
+          ungraded: psa10Product["loose-price"]
+            ? (psa10Product["loose-price"] / 100).toFixed(2)
+            : null,
+        });
+
+        if (fallbackPrices.length > 0) {
+          // Use the highest available fallback price
+          const maxPriceCents = Math.max(...fallbackPrices);
+          const maxPrice = (maxPriceCents / 100).toFixed(2);
+
+          // Log which fallback price field was selected
+          const fallbackPriceFields = [
+            "bgs10",
+            "cgc10",
+            "sgc10",
+            "graded9",
+            "graded8",
+            "graded7",
+            "ungraded",
+          ];
+          const selectedPriceField = fallbackPrices.indexOf(maxPriceCents);
+          console.log(
+            "[PokePrice] No PSA 10 price available, using fallback field:",
+            fallbackPriceFields[selectedPriceField]
+          );
+          console.log("[PokePrice] Returning fallback price:", maxPrice);
           return maxPrice;
         } else {
-          console.log("[PokePrice] No valid prices found for product");
+          console.log(
+            "[PokePrice] No valid prices found for product (including fallbacks)"
+          );
         }
       }
     } else {

@@ -125,6 +125,15 @@ function extractCostDetails(listing) {
   // console.log("[PokePrice] Listing classes:", listing.className);
 
   const priceSelectors = [
+    // More specific current price selectors first
+    "span.su-styled-text.primary.bold.large-1.s-card__price:not([class*='was']):not([class*='original']):not([class*='strike'])",
+    ".s-item__price:not([class*='was']):not([class*='original']):not([class*='strike'])",
+    ".notranslate:not([class*='was']):not([class*='original']):not([class*='strike'])",
+    // Then more general selectors with filtering
+    "span[class*='price']:not([class*='was']):not([class*='original']):not([class*='strike'])",
+    "span[class*='su-styled-text'][class*='primary']:not([class*='was']):not([class*='original']):not([class*='strike'])",
+    ".s-item__detail--primary:not([class*='was']):not([class*='original']):not([class*='strike'])",
+    // Fallback to original selectors if needed
     "span.su-styled-text.primary.bold.large-1.s-card__price",
     ".s-item__price",
     ".notranslate",
@@ -135,30 +144,199 @@ function extractCostDetails(listing) {
 
   let priceElement = null;
   for (const selector of priceSelectors) {
-    priceElement = listing.querySelector(selector);
-    // Reduced logging to prevent spam
-    // console.log(`[PokePrice] Price selector "${selector}":`, !!priceElement);
-    if (priceElement) {
-      // console.log(
-      //   `[PokePrice] Found price element:`,
-      //   priceElement.textContent.trim()
-      // );
-      break;
+    const candidateElements = listing.querySelectorAll(selector);
+    for (const candidate of candidateElements) {
+      const candidateText = candidate.textContent.trim();
+
+      // More aggressive filtering for "Was:" prices and discount indicators
+      const isWasPrice =
+        candidateText.toLowerCase().includes("was:") ||
+        candidateText.toLowerCase().includes("was $") ||
+        candidateText.toLowerCase().startsWith("was ") ||
+        candidateText.toLowerCase().includes("originally") ||
+        candidateText.toLowerCase().includes("list price") ||
+        candidateText.toLowerCase().includes("msrp") ||
+        candidateText.toLowerCase().includes("% off") ||
+        candidateText.toLowerCase().includes("save ") ||
+        candidateText.toLowerCase().includes("discount") ||
+        candidateText.toLowerCase().includes("reduced") ||
+        candidateText.toLowerCase().includes("marked down") ||
+        candidateText.toLowerCase().includes("regular price") ||
+        candidateText.toLowerCase().includes("retail price") ||
+        // Check if the element's parent contains "was" indicators
+        (candidate.parentElement &&
+          candidate.parentElement.textContent.toLowerCase().includes("was")) ||
+        // Check if element has strikethrough styling (common for "was" prices)
+        getComputedStyle(candidate).textDecoration.includes("line-through") ||
+        // Check if element has specific classes that indicate discount pricing
+        candidate.className.toLowerCase().includes("strike") ||
+        candidate.className.toLowerCase().includes("crossed") ||
+        candidate.className.toLowerCase().includes("original") ||
+        candidate.className.toLowerCase().includes("was");
+
+      if (!isWasPrice && candidateText.match(/\$([0-9,]+\.?[0-9]*)/)) {
+        priceElement = candidate;
+        console.log("[PokePrice] Selected valid price element:", candidateText);
+        break;
+      } else if (isWasPrice) {
+        console.log(
+          "[PokePrice] Skipping discount/was price element:",
+          candidateText
+        );
+      } else {
+        console.log("[PokePrice] No price found in element:", candidateText);
+      }
     }
+    if (priceElement) break;
   }
 
   if (priceElement) {
     const priceText = priceElement.textContent.trim();
     // console.log("[PokePrice] Price element text:", priceText);
-    const priceMatch = priceText.match(/\$([0-9,]+\.?[0-9]*)/);
-    const priceMatches = priceText.match(/\$([0-9,]+\.?[0-9]*)/g);
-    if (priceMatches) {
-      const prices = priceMatches.map(p => parseFloat(p.replace(/[^0-9.]/g, "")));
-      costs.price = Math.min(...prices);
+
+    // Skip elements that contain "Was:" prices (these are previous/strikethrough prices)
+    const isWasPrice =
+      priceText.toLowerCase().includes("was:") ||
+      priceText.toLowerCase().includes("was $") ||
+      priceText.toLowerCase().startsWith("was ") ||
+      priceText.toLowerCase().includes("originally") ||
+      priceText.toLowerCase().includes("list price") ||
+      priceText.toLowerCase().includes("msrp") ||
+      priceText.toLowerCase().includes("% off") ||
+      priceText.toLowerCase().includes("save ") ||
+      priceText.toLowerCase().includes("discount") ||
+      priceText.toLowerCase().includes("reduced") ||
+      priceText.toLowerCase().includes("marked down") ||
+      priceText.toLowerCase().includes("regular price") ||
+      priceText.toLowerCase().includes("retail price");
+
+    if (isWasPrice) {
+      console.log(
+        "[PokePrice] Skipping discount/was price element:",
+        priceText
+      );
+      // Look for next price element that's not a discount price
+      let foundValidPrice = false;
+      for (const selector of priceSelectors) {
+        const elements = listing.querySelectorAll(selector);
+        for (const element of elements) {
+          const elementText = element.textContent.trim();
+          const elementIsWasPrice =
+            elementText.toLowerCase().includes("was:") ||
+            elementText.toLowerCase().includes("was $") ||
+            elementText.toLowerCase().startsWith("was ") ||
+            elementText.toLowerCase().includes("originally") ||
+            elementText.toLowerCase().includes("list price") ||
+            elementText.toLowerCase().includes("msrp") ||
+            elementText.toLowerCase().includes("% off") ||
+            elementText.toLowerCase().includes("save ") ||
+            elementText.toLowerCase().includes("discount") ||
+            elementText.toLowerCase().includes("reduced") ||
+            elementText.toLowerCase().includes("marked down") ||
+            elementText.toLowerCase().includes("regular price") ||
+            elementText.toLowerCase().includes("retail price");
+
+          if (!elementIsWasPrice && elementText.match(/\$([0-9,]+\.?[0-9]*)/)) {
+            const priceMatches = elementText.match(/\$([0-9,]+\.?[0-9]*)/g);
+            if (priceMatches) {
+              // Use friend's approach: if multiple prices, take the minimum
+              const prices = priceMatches.map(p => parseFloat(p.replace(/[^0-9.]/g, "")));
+              costs.price = Math.min(...prices);
+              console.log(
+                "[PokePrice] Found valid current price:",
+                costs.price
+              );
+              foundValidPrice = true;
+              break;
+            }
+          }
+        }
+        if (foundValidPrice) break;
+      }
+    } else {
+      // Normal price extraction for non-discount prices
+      const priceMatches = priceText.match(/\$([0-9,]+\.?[0-9]*)/g);
+      if (priceMatches) {
+        // Double check: if the text contains "was" but we're here,
+        // make sure we're getting the current price, not the "was" price
+        if (priceText.toLowerCase().includes("was")) {
+          console.log(
+            "[PokePrice] Element contains 'was' - analyzing:",
+            priceText
+          );
+
+          // Try to extract only the current price by finding prices NOT preceded by "was"
+          const allPriceMatches = [
+            ...priceText.matchAll(/\$([0-9,]+\.?[0-9]*)/g),
+          ];
+          let currentPrice = null;
+
+          for (let i = 0; i < allPriceMatches.length; i++) {
+            const match = allPriceMatches[i];
+            const beforeMatch = priceText
+              .substring(0, match.index)
+              .toLowerCase();
+
+            // Check if this price is preceded by "was" indicators within reasonable distance
+            const wasIndicators = [
+              "was",
+              "originally",
+              "list price",
+              "msrp",
+              "regular",
+              "retail",
+            ];
+            const isWasPreceded = wasIndicators.some((indicator) => {
+              const lastIndex = beforeMatch.lastIndexOf(indicator);
+              return lastIndex !== -1 && match.index - lastIndex < 50; // within 50 chars
+            });
+
+            if (!isWasPreceded) {
+              currentPrice = parseFloat(match[1].replace(/,/g, ""));
+              console.log(
+                "[PokePrice] Found current price in mixed content:",
+                currentPrice
+              );
+              break;
+            } else {
+              console.log("[PokePrice] Skipping was-preceded price:", match[1]);
+            }
+          }
+
+          // Additional check: if we found multiple prices, prefer the smaller one
+          // (current sale price is usually less than "was" price)
+          if (currentPrice === null && allPriceMatches.length > 1) {
+            const prices = allPriceMatches.map((match) =>
+              parseFloat(match[1].replace(/,/g, ""))
+            );
+            currentPrice = Math.min(...prices);
+            console.log(
+              "[PokePrice] Multiple prices found, using smaller (likely current):",
+              currentPrice
+            );
+          }
+
+          if (currentPrice !== null) {
+            costs.price = currentPrice;
+          } else {
+            console.log(
+              "[PokePrice] No valid current price found in mixed content"
+            );
+          }
+        } else {
+          // Simple case - no "was" in the text, use friend's approach for multiple prices
+          const prices = priceMatches.map(p => parseFloat(p.replace(/[^0-9.]/g, "")));
+          costs.price = Math.min(...prices);
+          // console.log("[PokePrice] Extracted price:", costs.price);
+        }
+      }
     }
   } else {
     console.log("[PokePrice] No price element found");
   }
+
+  // Additional debug logging for price extraction
+  console.log("[PokePrice] Final extracted price:", costs.price);
 
   const shippingSelectors = [
     ".s-card__attribute-row span.su-styled-text.secondary.large",
