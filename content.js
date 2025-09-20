@@ -116,6 +116,7 @@ function extractCostDetails(listing) {
 
   const shippingSelectors = [
     ".s-card__attribute-row span.su-styled-text.secondary.large",
+    "su-styled-text positive bold large",
     "span.su-styled-text.secondary.large",
     ".s-item__shipping",
     ".s-item__detail--secondary",
@@ -142,7 +143,7 @@ function extractCostDetails(listing) {
         text.toLowerCase().includes("delivery") ||
         text.toLowerCase().includes("shipping") ||
         text.match(/\+?\$[0-9,]+\.?[0-9]*/) ||
-        text.toLowerCase().includes("free shipping")
+        text.toLowerCase().includes("free delivery")
       ) {
         console.log(`[PokePrice] Found potential shipping text: "${text}"`);
         shippingElement = element;
