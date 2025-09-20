@@ -887,24 +887,39 @@ function processItemPage() {
 
       console.log("[PokePrice] Item page requesting price for:", cleaned);
 
+      // --- Fetch again with cleaned title for extra accuracy ---
       chrome.runtime.sendMessage({ title: cleaned, year }, (response) => {
         if (chrome.runtime.lastError) {
           console.error("[PokePrice] Runtime error:", chrome.runtime.lastError);
           return;
         }
-        console.log("[PokePrice] Item page API response:", response);
+        // console.log("[PokePrice] API response:", response);
+
         if (response && response.price) {
-          createPriceTag(itemContainer, response.price, false);
-          console.log(
-            "[PokePrice] Updated item page price tag with:",
-            response.price
-          );
+          createPriceTag(listing, response.price, false);
+          // console.log("[PokePrice] Updated price tag with:", response.price);
+
+          // Log the source if available
+          if (response.source) {
+            // console.log(`[PokePrice] Price source: ${response.source}`);
+          }
         } else {
-          console.log("[PokePrice] No price found for item page:", cleaned);
+          console.log("[PokePrice] No price found for:", cleaned);
+
+          // Log error details if available
+          if (response && response.error) {
+            console.warn("[PokePrice] Error details:", response.error);
+
+            // Update the tag to show error state for debugging
+            const priceTag = listing.querySelector(".pokeprice-tag");
+            if (priceTag) {
+              priceTag.innerText = "PC: Error";
+              priceTag.style.background = "rgba(255,100,100,0.92)";
+              priceTag.title = response.error; // Show error on hover
+            }
+          }
         }
       });
-    }
-  }
 }
 
 
