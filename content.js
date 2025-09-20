@@ -7,7 +7,6 @@ function injectPokePriceStyles() {
       position: absolute !important;
       right: 10px;
       bottom: 10px;
-      background: rgba(255,255,0,0.92);
       padding: 3px 8px;
       font-size: 13px;
       font-weight: bold;
@@ -239,6 +238,17 @@ function processListing(listing, idx) {
   const costs = extractCostDetails(listing);
   createCostBreakdownBox(listing, costs, false);
 
+  // Apply dynamic gradient color if pcCost is available
+  if (typeof pcCost !== "undefined" && pcCost) {
+    const color = getColorGradient(costs, pcCost);
+
+    let priceTag = listing.querySelector(".pokeprice-tag");
+    if (priceTag) {
+      priceTag.style.background = color;
+    }
+  }
+
+
   const yearMatch = title.match(/\d{4}/);
   const year = yearMatch ? yearMatch[0] : null;
 
@@ -278,7 +288,7 @@ function processListing(listing, idx) {
 
 function processAllListings() {
   const listings = document.querySelectorAll(".su-card-container");
-
+  
   if (listings.length === 0) {
     return;
   }
@@ -462,6 +472,20 @@ function init() {
     // Start observing for new listings on search pages
     observer.observe(document.body, { childList: true, subtree: true });
   }
+}
+
+function getColorGradient(ebayCost, pcCost){ //pcCost not yet set.
+  const minCost = .5 * pcCost;
+  const maxCost = 1.5 * pcCost;
+  const cost = ebayCost.total - pcCost;
+
+  const ratio = Math.min(Math.max((cost - minCost) / (maxCost - minCost), 0), 1);
+
+  const r = Math.round(0 + ratio * (139 - 0));
+  const g = Math.round(100 + ratio * (0 - 100));
+  const b = 0;
+
+  return 'rgb(${r}, ${g}, ${b})';
 }
 
 // Start initialization
