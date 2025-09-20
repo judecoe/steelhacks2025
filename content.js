@@ -901,6 +901,7 @@ function init() {
 
   if (isItemPage) {
     // Handle individual item page
+    const costs = extractItemPageCosts();
     setTimeout(() => {
       processItemPage(costs);
     }, 2000);
