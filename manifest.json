@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "eBay PSA 10 Price Overlay",
+  "version": "1.0",
+  "permissions": ["activeTab", "scripting"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://www.ebay.com/sch/*", "*://www.ebay.com/itm/*"],
+      "js": ["content.js"]
+    }
+  ],
+  "host_permissions": ["*://www.pricecharting.com/*"]
+}
