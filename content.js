@@ -859,16 +859,31 @@ function extractItemPageCosts() {
     "span[class*='price']",
   ];
 
+  let priceElement = null;
   for (const selector of priceSelectors) {
-    const priceElement = document.querySelector(selector);
+    priceElement = listing.querySelector(selector);
+    // Reduced logging to prevent spam
+    // console.log(`[PokePrice] Price selector "${selector}":`, !!priceElement);
     if (priceElement) {
-      const priceText = priceElement.textContent.trim();
-      const priceMatch = priceText.match(/\$([0-9,]+\.?[0-9]*)/);
-      if (priceMatch) {
-        costs.price = parseFloat(priceMatch[1].replace(/,/g, ""));
-        break;
-      }
+      // console.log(
+      //   `[PokePrice] Found price element:`,
+      //   priceElement.textContent.trim()
+      // );
+      break;
     }
+  }
+
+  if (priceElement) {
+    const priceText = priceElement.textContent.trim();
+    // console.log("[PokePrice] Price element text:", priceText);
+    const priceMatch = priceText.match(/\$([0-9,]+\.?[0-9]*)/);
+    const priceMatches = priceText.match(/\$([0-9,]+\.?[0-9]*)/g);
+    if (priceMatches) {
+      const prices = priceMatches.map(p => parseFloat(p.replace(/[^0-9.]/g, "")));
+      costs.price = Math.min(...prices);
+    }
+  } else {
+    console.log("[PokePrice] No price element found");
   }
 
   // Look for shipping on item page
