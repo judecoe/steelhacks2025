@@ -758,49 +758,51 @@ function processItemPage(costs) {
       const ebayTotal = Number(costs.total) || 0;
 
       if (pcCostNum && !isNaN(pcCostNum)) {
-        // gradient background just like in processListing
+        // gradient background like processListing
         const color = getColorGradient(ebayTotal, pcCostNum);
 
-        // container for item page display
-        let container = document.querySelector(".pokeprice-item-page-container");
-        if (!container) {
-          container = document.createElement("div");
-          container.className = "pokeprice-item-page-container";
-          document.body.appendChild(container);
+        // Find the eBay price element
+        const priceContainer = document.querySelector(".x-price-primary");
+        if (!priceContainer) return;
+
+        // Avoid duplicates if rerun
+        let pokeWrapper = priceContainer.querySelector(".pokeprice-wrapper");
+        if (!pokeWrapper) {
+          pokeWrapper = document.createElement("span");
+          pokeWrapper.className = "pokeprice-wrapper";
+          pokeWrapper.style.marginLeft = "10px"; // space between ebay price and ours
+          pokeWrapper.style.display = "inline-flex";
+          pokeWrapper.style.gap = "8px";
+          priceContainer.appendChild(pokeWrapper);
+        } else {
+          pokeWrapper.innerHTML = ""; // clear old
         }
 
-        // main price tag (with gradient)
-        let priceTag = container.querySelector(".pokeprice-tag");
-        if (!priceTag) {
-          createPriceTag(container, null, true);
-          priceTag = container.querySelector(".pokeprice-tag");
-        }
-        priceTag.style.background = color;
-        priceTag.style.color = "white";
-        createPriceTag(container, pcCostNum, false);
+        // pcCost tag (with gradient)
+        const pcTag = document.createElement("span");
+        pcTag.className = "pokeprice-tag";
+        pcTag.textContent = `$${pcCostNum.toFixed(2)}`;
+        pcTag.style.background = color;
+        pcTag.style.color = "white";
+        pcTag.style.padding = "2px 6px";
+        pcTag.style.borderRadius = "4px";
 
-        // total cost box (added below)
-        let totalBox = container.querySelector(".pokeprice-cost-box");
-        if (!totalBox) {
-          totalBox = document.createElement("div");
-          totalBox.className = "pokeprice-cost-box";
-          container.appendChild(totalBox);
-        }
+        // total cost tag
+        const totalTag = document.createElement("span");
+        totalTag.className = "pokeprice-total";
+        totalTag.textContent = `Total: $${ebayTotal.toFixed(2)}`;
+        totalTag.style.background = "#444";
+        totalTag.style.color = "white";
+        totalTag.style.padding = "2px 6px";
+        totalTag.style.borderRadius = "4px";
 
-        totalBox.innerHTML = `
-          <div class="pokeprice-cost-line">
-            <span>Item:</span>
-            <span>$${pcCostNum.toFixed(2)}</span>
-          </div>
-          <div class="pokeprice-cost-line pokeprice-cost-total">
-            <span>Total:</span>
-            <span>$${ebayTotal.toFixed(2)}</span>
-          </div>
-        `;
+        pokeWrapper.appendChild(pcTag);
+        pokeWrapper.appendChild(totalTag);
       }
     }
   );
 }
+
 
 
 function extractItemPageCosts() {
@@ -900,7 +902,7 @@ function init() {
   if (isItemPage) {
     // Handle individual item page
     setTimeout(() => {
-      processItemPage();
+      processItemPage(costs);
     }, 2000);
   } else if (isSearchPage) {
     // Handle search results page
