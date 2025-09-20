@@ -873,7 +873,7 @@ function extractItemPageCosts() {
 
   // Look for shipping on item page
   const shippingSelectors = [
-    "[class*='ux-textspans ux-textspans--POSITIVE ux-textspans--BOLD'",
+    "[class*='ux-textspans ux-textspans--POSITIVE ux-textspans--BOLD']",
     "[class*='shipping']",
     "[class*='delivery']",
     "[id*='shipping']",
