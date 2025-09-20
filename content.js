@@ -884,7 +884,7 @@ function extractItemPageCosts() {
 
   if (priceElement) {
     const priceText = priceElement.textContent.trim();
-    // console.log("[PokePrice] Price element text:", priceText);
+    console.log("[PokePrice] Price element text:", priceText);
     const priceMatch = priceText.match(/\$([0-9,]+\.?[0-9]*)/);
     const priceMatches = priceText.match(/\$([0-9,]+\.?[0-9]*)/g);
     if (priceMatches) {
