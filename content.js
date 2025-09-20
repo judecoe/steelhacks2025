@@ -105,9 +105,10 @@ function extractCostDetails(listing) {
     const priceText = priceElement.textContent.trim();
     console.log("[PokePrice] Price element text:", priceText);
     const priceMatch = priceText.match(/\$([0-9,]+\.?[0-9]*)/);
-    if (priceMatch) {
-      costs.price = parseFloat(priceMatch[1].replace(/,/g, ""));
-      console.log("[PokePrice] Extracted price:", costs.price);
+    const priceMatches = priceText.match(/\$([0-9,]+\.?[0-9]*)/g);
+    if (priceMatches) {
+      const prices = priceMatches.map(p => parseFloat(p.replace(/[^0-9.]/g, "")));
+      costs.price = Math.min(...prices);
     }
   } else {
     console.log("[PokePrice] No price element found with any selector");
@@ -216,30 +217,6 @@ function createPriceTag(listing, price, isPlaceholder = false) {
   } else {
     priceTag.innerText = `PC: $${price}`;
   }
-}
-
-function getColorGradient(ebayTotal, pcCost) {
-  if (!pcCost || isNaN(pcCost) || pcCost <= 0 || isNaN(ebayTotal)) {
-    return 'hsl(0, 0%, 80%)'; // neutral gray fallback
-  }
-
-  const ratio = ebayTotal / pcCost;
-
-  if (ratio <= 0.5) {
-    return `hsl(120, 85%, 25%)`; // dark green
-  }
-
-  if (ratio >= 1.5) {
-    return `hsl(0, 85%, 25%)`; // dark red
-  }
-
-  const t = (ratio - 0.5) / (1.5 - 0.5);
-
-  const hue = 120 * (1 - t); // 120 -> 0
-  const sat = 85;
-  const lightness = 25 + 30 * (1 - Math.abs(2 * t - 1)); // 25–55%
-
-  return `hsl(${hue.toFixed(1)}, ${sat}%, ${lightness.toFixed(1)}%)`;
 }
 
 function processListing(listing, idx) {
