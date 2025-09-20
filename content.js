@@ -125,8 +125,7 @@ function extractCostDetails(listing) {
     "[class*='shipping']",
     "span", // Check all spans as last resort
   ];
-<span class="su-styled-text positive bold large">
-<span class="su-styled-text secondary large">
+
   let shippingElement = null;
   let foundShippingText = "";
 
