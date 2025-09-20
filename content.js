@@ -494,7 +494,8 @@ function getColorGradient(ebayCost, pcCost){ //sets color gradient based on ebay
   const g = Math.round(100 + ratio * (0 - 100));
   const b = 0;
 
-  return 'rgb(${r}, ${g}, ${b})';
+  return `rgb(${r}, ${g}, ${b})`;
+
 }
 
 // Start initialization
