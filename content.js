@@ -771,6 +771,9 @@ function processItemPage() {
 
   // --- COSTS (ebay-side) ---
   const costs = extractItemPageCosts();
+
+  console.log("ITEM PAGE COST: ", costs.total);
+
   if (costs) {
     createCostBreakdownBox(itemContainer, costs, false);
   } else {
