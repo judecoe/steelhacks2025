@@ -895,22 +895,49 @@ function extractItemPageCosts() {
     "[id*='delivery']",
   ];
 
+  let shippingElement = null;
+  let foundShippingText = "";
+
   for (const selector of shippingSelectors) {
-    const elements = document.querySelectorAll(selector);
+    const elements = listing.querySelectorAll(selector);
+    // Reduced shipping selector logging to prevent spam
+    // console.log(`[PokePrice] Shipping selector "${selector}": found ${elements.length} elements`);
+
     for (const element of elements) {
       const text = element.textContent.trim();
-      if (text.toLowerCase().includes("free")) {
-        costs.shipping = 0;
+      // console.log(`[PokePrice] Checking element text: "${text}"`);
+
+      if (
+        text.toLowerCase().includes("delivery") ||
+        text.toLowerCase().includes("shipping") ||
+        text.match(/\+?\$[0-9,]+\.?[0-9]*/) ||
+        text.toLowerCase().includes("free delivery")
+      ) {
+        // console.log(`[PokePrice] Found shipping text: "${text}"`);
+        shippingElement = element;
+        foundShippingText = text;
         break;
-      } else {
-        const shippingMatch = text.match(/\+?\$([0-9,]+\.?[0-9]*)/);
-        if (shippingMatch) {
-          costs.shipping = parseFloat(shippingMatch[1].replace(/,/g, ""));
-          break;
-        }
       }
     }
-    if (costs.shipping > 0) break;
+
+    if (shippingElement) break;
+  }
+
+  if (shippingElement) {
+    console.log("[PokePrice] Final shipping element text:", foundShippingText);
+    if (foundShippingText.toLowerCase().startsWith("free delivery")) {
+      costs.shipping = 0;
+      console.log("[PokePrice] Free delivery detected");
+    } else {
+      const shippingMatch = foundShippingText.match(/\$([0-9,]+\.?[0-9]*)/);
+      if (shippingMatch) {
+        costs.shipping = parseFloat(shippingMatch[1].replace(/,/g, ""));
+        // console.log("[PokePrice] Extracted shipping:", costs.shipping);
+      }
+    }
+
+  } else {
+    // console.log("[PokePrice] No shipping element found");
   }
 
   // Calculate tax and total
