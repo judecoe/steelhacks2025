@@ -909,9 +909,7 @@ function extractItemPageCosts() {
 
       if (
         text.toLowerCase().includes("delivery") ||
-        text.toLowerCase().includes("shipping") ||
-        text.match(/\+?\$[0-9,]+\.?[0-9]*/) ||
-        text.toLowerCase().includes("free delivery")
+        text.match(/\+?\$[0-9,]+\.?[0-9]*/)
       ) {
         // console.log(`[PokePrice] Found shipping text: "${text}"`);
         shippingElement = element;
