@@ -8,9 +8,15 @@
   },
   "content_scripts": [
     {
-      "matches": ["*://www.ebay.com/sch/*", "*://www.ebay.com/itm/*"],
-      "js": ["content.js"]
+      "matches": ["*://www.ebay.com/sch/*"],
+      "js": ["config.js", "content.js"]
     }
   ],
-  "host_permissions": ["*://www.pricecharting.com/*"]
+  "host_permissions": ["*://www.pricecharting.com/*"],
+  "web_accessible_resources": [
+    {
+      "resources": ["config.js"],
+      "matches": ["*://www.ebay.com/*"]
+    }
+  ]
 }
