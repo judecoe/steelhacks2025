@@ -116,7 +116,7 @@ function extractCostDetails(listing) {
 
   const shippingSelectors = [
     ".s-card__attribute-row span.su-styled-text.secondary.large",
-    "su-styled-text positive bold large",
+    "su-styled-text.positive.bold.large",
     "span.su-styled-text.secondary.large",
     ".s-item__shipping",
     ".s-item__detail--secondary",
