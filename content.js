@@ -240,7 +240,9 @@ function extractCostDetails(listing) {
             const priceMatches = elementText.match(/\$([0-9,]+\.?[0-9]*)/g);
             if (priceMatches) {
               // Use friend's approach: if multiple prices, take the minimum
-              const prices = priceMatches.map(p => parseFloat(p.replace(/[^0-9.]/g, "")));
+              const prices = priceMatches.map((p) =>
+                parseFloat(p.replace(/[^0-9.]/g, ""))
+              );
               costs.price = Math.min(...prices);
               console.log(
                 "[PokePrice] Found valid current price:",
@@ -325,7 +327,9 @@ function extractCostDetails(listing) {
           }
         } else {
           // Simple case - no "was" in the text, use friend's approach for multiple prices
-          const prices = priceMatches.map(p => parseFloat(p.replace(/[^0-9.]/g, "")));
+          const prices = priceMatches.map((p) =>
+            parseFloat(p.replace(/[^0-9.]/g, ""))
+          );
           costs.price = Math.min(...prices);
           // console.log("[PokePrice] Extracted price:", costs.price);
         }
@@ -390,7 +394,6 @@ function extractCostDetails(listing) {
         // console.log("[PokePrice] Extracted shipping:", costs.shipping);
       }
     }
-
   } else {
     // console.log("[PokePrice] No shipping element found");
   }
@@ -748,7 +751,8 @@ function processListing(listing, idx) {
         return;
       }
 
-      const pcCostNum = response && response.price ? parseFloat(response.price) : NaN;
+      const pcCostNum =
+        response && response.price ? parseFloat(response.price) : NaN;
       const ebayTotal = Number(costs.total) || 0;
 
       if (pcCostNum && !isNaN(pcCostNum)) {
@@ -823,7 +827,7 @@ function processListing(listing, idx) {
 
 function processAllListings() {
   const listings = document.querySelectorAll(".su-card-container");
-  
+
   if (listings.length === 0) {
     return;
   }
@@ -1171,7 +1175,7 @@ function init() {
 function getColorGradient(ebayTotal, pcCost) {
   // safety
   if (!pcCost || isNaN(pcCost) || pcCost <= 0 || isNaN(ebayTotal)) {
-    return 'hsl(0, 0%, 80%)'; // neutral gray as fallback
+    return "hsl(0, 0%, 80%)"; // neutral gray as fallback
   }
 
   const ratio = ebayTotal / pcCost;
@@ -1197,7 +1201,7 @@ function getColorGradient(ebayTotal, pcCost) {
 
   // lightness: triangular shape that peaks in the middle
   // L ranges from 25% (dark ends) up to 55% (bright middle)
-  const lightness = 25 + 30 * (1 - Math.abs(2 * t - 1)); 
+  const lightness = 25 + 30 * (1 - Math.abs(2 * t - 1));
   // explanation: at t=0 or t=1 => L=25; at t=0.5 => L=55
 
   return `hsl(${hue.toFixed(1)}, ${sat}%, ${lightness.toFixed(1)}%)`;
