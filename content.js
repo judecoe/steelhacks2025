@@ -861,7 +861,7 @@ function extractItemPageCosts() {
 
   let priceElement = null;
   for (const selector of priceSelectors) {
-    priceElement = listing.querySelector(selector);
+    priceElement = document.querySelector(selector);
     // Reduced logging to prevent spam
     // console.log(`[PokePrice] Price selector "${selector}":`, !!priceElement);
     if (priceElement) {
@@ -899,7 +899,7 @@ function extractItemPageCosts() {
   let foundShippingText = "";
 
   for (const selector of shippingSelectors) {
-    const elements = listing.querySelectorAll(selector);
+    const elements = document.querySelectorAll(selector);
     // Reduced shipping selector logging to prevent spam
     // console.log(`[PokePrice] Shipping selector "${selector}": found ${elements.length} elements`);
 
