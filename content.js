@@ -228,6 +228,26 @@ function processListing(listing, idx) {
     return;
   }
 
+  //fetch pcCost from background.js
+  if (title) {
+    chrome.runtime.sendMessage(
+      { title, year: null, originalTitle: null }, 
+      (response) => {
+        const pcCost = response.price; // 💰 this comes from background.js
+
+        if (pcCost) {
+          const costs = extractCostDetails(listing);
+          createCostBreakdownBox(listing, costs, false);
+
+          const color = getColorGradient(costs, pcCost); //set color gradient based on ebayCost & pcCost 
+          const priceTag = listing.querySelector(".pokeprice-tag");
+          if (priceTag) {
+            priceTag.style.background = color;
+          }
+        }
+      }
+    );
+  }
   if (getComputedStyle(listing).position === "static") {
     listing.classList.add("pokeprice-rel");
   }
@@ -237,17 +257,6 @@ function processListing(listing, idx) {
 
   const costs = extractCostDetails(listing);
   createCostBreakdownBox(listing, costs, false);
-
-  // Apply dynamic gradient color if pcCost is available
-  if (typeof pcCost !== "undefined" && pcCost) {
-    const color = getColorGradient(costs, pcCost);
-
-    let priceTag = listing.querySelector(".pokeprice-tag");
-    if (priceTag) {
-      priceTag.style.background = color;
-    }
-  }
-
 
   const yearMatch = title.match(/\d{4}/);
   const year = yearMatch ? yearMatch[0] : null;
@@ -474,7 +483,7 @@ function init() {
   }
 }
 
-function getColorGradient(ebayCost, pcCost){ //pcCost not yet set.
+function getColorGradient(ebayCost, pcCost){ //sets color gradient based on ebayCost vs. pcCost. Dark Green -> Dark Red
   const minCost = .5 * pcCost;
   const maxCost = 1.5 * pcCost;
   const cost = ebayCost.total - pcCost;
