@@ -850,7 +850,7 @@ function extractItemPageCosts() {
 
   // Look for price on item page
   const priceSelectors = [
-    "span.ux-textspans",
+    "span[class='ux-textspans']",
     ".price-current",
     ".display-price",
     ".notranslate",
@@ -873,7 +873,7 @@ function extractItemPageCosts() {
 
   // Look for shipping on item page
   const shippingSelectors = [
-    "[class*='ux-textspans ux-textspans--POSITIVE ux-textspans--BOLD']",
+    "span[class*='ux-textspans ux-textspans--POSITIVE ux-textspans--BOLD']",
     "[class*='shipping']",
     "[class*='delivery']",
     "[id*='shipping']",
