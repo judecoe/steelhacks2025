@@ -156,17 +156,17 @@ function extractCostDetails(listing) {
 
   if (shippingElement) {
     console.log("[PokePrice] Final shipping element text:", foundShippingText);
-    if (foundShippingText.toLowerCase().includes("free")) {
+    if (foundShippingText.toLowerCase().startsWith("free delivery")) {
       costs.shipping = 0;
-      console.log("[PokePrice] Free shipping detected");
+      console.log("[PokePrice] Free delivery detected");
     } else {
-      const shippingMatch = foundShippingText.match(/\+?\$([0-9,]+\.?[0-9]*)/);
-      console.log("[PokePrice] Shipping regex match:", shippingMatch);
+      const shippingMatch = foundShippingText.match(/\$([0-9,]+\.?[0-9]*)/);
       if (shippingMatch) {
         costs.shipping = parseFloat(shippingMatch[1].replace(/,/g, ""));
         console.log("[PokePrice] Extracted shipping:", costs.shipping);
       }
     }
+
   } else {
     console.log("[PokePrice] No shipping element found with any selector");
   }
