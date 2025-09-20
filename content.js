@@ -746,61 +746,165 @@ function processAllListings() {
   });
 }
 
-function processItemPage(costs) {
-  chrome.runtime.sendMessage(
-    { title, year: null, originalTitle: null },
-    (response) => {
-      if (chrome.runtime.lastError) {
-        return;
-      }
+function processItemPage() {
+  const itemContainer = document.createElement("div");
+  itemContainer.className = "pokeprice-item-page-container";
+  itemContainer.style.position = "relative";
 
-      const pcCostNum = response && response.price ? parseFloat(response.price) : NaN;
-      const ebayTotal = Number(costs.total) || 0;
+  const mainContent =
+    document.querySelector("#mainContent") ||
+    document.querySelector(".notranslate") ||
+    document.body;
 
-      if (pcCostNum && !isNaN(pcCostNum)) {
-        // gradient background like processListing
-        const color = getColorGradient(ebayTotal, pcCostNum);
+  if (mainContent) {
+    mainContent.appendChild(itemContainer);
 
-        // Find the eBay price element
-        const priceContainer = document.querySelector(".x-price-primary");
-        if (!priceContainer) return;
+    const titleElement =
+      document.querySelector("#x-title-label-lbl") ||
+      document.querySelector("h1[id*='title']") ||
+      document.querySelector("h1");
 
-        // Avoid duplicates if rerun
-        let pokeWrapper = priceContainer.querySelector(".pokeprice-wrapper");
-        if (!pokeWrapper) {
-          pokeWrapper = document.createElement("span");
-          pokeWrapper.className = "pokeprice-wrapper";
-          pokeWrapper.style.marginLeft = "10px"; // space between ebay price and ours
-          pokeWrapper.style.display = "inline-flex";
-          pokeWrapper.style.gap = "8px";
-          priceContainer.appendChild(pokeWrapper);
-        } else {
-          pokeWrapper.innerHTML = ""; // clear old
+    if (titleElement) {
+      const title = titleElement.textContent.trim();
+
+      createPriceTag(itemContainer, null, true);
+      createCostBreakdownBox(itemContainer, null, true);
+
+      const costs = extractItemPageCosts();
+      createCostBreakdownBox(itemContainer, costs, false);
+
+      // --- Fetch raw PC cost from background.js ---
+      chrome.runtime.sendMessage(
+        { title, year: null, originalTitle: null },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            return;
+          }
+
+          const pcCostNum = response && response.price ? parseFloat(response.price) : NaN;
+          const ebayTotal = Number(costs.total) || 0;
+
+          if (pcCostNum && !isNaN(pcCostNum)) {
+            const color = getColorGradient(ebayTotal, pcCostNum);
+
+            let priceTag = listing.querySelector(".pokeprice-tag");
+            if (!priceTag) {
+              createPriceTag(listing, null, true);
+              priceTag = listing.querySelector(".pokeprice-tag");
+            }
+
+            priceTag.style.background = color;
+            priceTag.style.color = "white"; // keep text readable
+            createPriceTag(listing, pcCostNum, false);
+          }
         }
+      );
 
-        // pcCost tag (with gradient)
-        const pcTag = document.createElement("span");
-        pcTag.className = "pokeprice-tag";
-        pcTag.textContent = `$${pcCostNum.toFixed(2)}`;
-        pcTag.style.background = color;
-        pcTag.style.color = "white";
-        pcTag.style.padding = "2px 6px";
-        pcTag.style.borderRadius = "4px";
+      const yearMatch = title.match(/\d{4}/);
+      const year = yearMatch ? yearMatch[0] : null;
 
-        // total cost tag
-        const totalTag = document.createElement("span");
-        totalTag.className = "pokeprice-total";
-        totalTag.textContent = `Total: $${ebayTotal.toFixed(2)}`;
-        totalTag.style.background = "#444";
-        totalTag.style.color = "white";
-        totalTag.style.padding = "2px 6px";
-        totalTag.style.borderRadius = "4px";
+      console.log("[PokePrice] Item page original title:", title);
 
-        pokeWrapper.appendChild(pcTag);
-        pokeWrapper.appendChild(totalTag);
+      // Improved title cleaning for Pokemon cards (same logic as processListing)
+      let cleaned = null;
+
+      // Look for common Pokemon card patterns
+      let match = title.match(/([A-Za-z\-\s]+)#([A-Za-z0-9\/]+)/);
+      if (match) {
+        cleaned = match[1].trim() + " #" + match[2].toUpperCase();
+      } else {
+        // Look for card names with numbers (like "Charizard 4/102")
+        match = title.match(/([A-Za-z\-\s]+)([0-9]+\/[0-9A-Za-z]+)/);
+        if (match) {
+          cleaned = match[1].trim() + " #" + match[2].toUpperCase();
+        } else {
+          // Look for card names with just numbers
+          match = title.match(/([A-Za-z\-\s]+)([0-9]{1,4})\b/);
+          if (match) {
+            cleaned = match[1].trim() + " #" + match[2];
+          } else {
+            // Try to extract Pokemon names from the title
+            const pokemonPattern =
+              /(Charizard|Pikachu|Blastoise|Venusaur|Mewtwo|Mew|Lugia|Ho-Oh|Rayquaza|Groudon|Kyogre|Dialga|Palkia|Giratina|Arceus|Reshiram|Zekrom|Kyurem|Xerneas|Yveltal|Zygarde|Solgaleo|Lunala|Necrozma|Zacian|Zamazenta|Eternatus|[A-Z][a-z]+)/i;
+            const pokemonMatch = title.match(pokemonPattern);
+            if (pokemonMatch) {
+              cleaned = pokemonMatch[1];
+              // Try to find a card number after the Pokemon name
+              const numberAfter = title
+                .substring(pokemonMatch.index + pokemonMatch[1].length)
+                .match(/#?([0-9]+(?:\/[0-9]+)?)/);
+              if (numberAfter) {
+                cleaned += " #" + numberAfter[1];
+              }
+            } else {
+              // If we can't find a Pokemon name, try to extract meaningful words
+              const words = title
+                .split(/\s+/)
+                .filter(
+                  (word) =>
+                    word.length > 2 &&
+                    !word.toLowerCase().includes("psa") &&
+                    !word.toLowerCase().includes("gem") &&
+                    !word.toLowerCase().includes("mint") &&
+                    !word.toLowerCase().includes("graded") &&
+                    !/^\d+$/.test(word) &&
+                    word !== "of"
+                );
+              if (words.length > 0) {
+                cleaned = words.slice(0, 2).join(" "); // Take first 2 meaningful words
+              } else {
+                cleaned = title.split(" ")[0]; // Fallback to first word
+              }
+            }
+          }
+        }
       }
+
+      if (!cleaned || cleaned.length < 3) {
+        // If we still don't have a good cleaned title, extract from original title
+        const words = title
+          .split(/\s+/)
+          .filter(
+            (word) =>
+              word.length > 2 &&
+              !word.toLowerCase().includes("psa") &&
+              !word.toLowerCase().includes("gem") &&
+              !word.toLowerCase().includes("mint") &&
+              !word.toLowerCase().includes("graded") &&
+              !/^\d+$/.test(word)
+          );
+        cleaned = words.slice(0, 3).join(" ") || title.split(" ")[0];
+      }
+
+      cleaned = cleaned.replace(/\s+/g, " ").trim();
+
+      // Only add PSA 10 if it's not already there
+      if (!/psa\s*10/i.test(cleaned)) {
+        cleaned += " PSA 10";
+      }
+
+      console.log("[PokePrice] Item page cleaned title:", cleaned);
+
+      console.log("[PokePrice] Item page requesting price for:", cleaned);
+
+      chrome.runtime.sendMessage({ title: cleaned, year }, (response) => {
+        if (chrome.runtime.lastError) {
+          console.error("[PokePrice] Runtime error:", chrome.runtime.lastError);
+          return;
+        }
+        console.log("[PokePrice] Item page API response:", response);
+        if (response && response.price) {
+          createPriceTag(itemContainer, response.price, false);
+          console.log(
+            "[PokePrice] Updated item page price tag with:",
+            response.price
+          );
+        } else {
+          console.log("[PokePrice] No price found for item page:", cleaned);
+        }
+      });
     }
-  );
+  }
 }
 
 
@@ -901,9 +1005,8 @@ function init() {
 
   if (isItemPage) {
     // Handle individual item page
-    const costs = extractItemPageCosts();
     setTimeout(() => {
-      processItemPage(costs);
+      processItemPage();
     }, 2000);
   } else if (isSearchPage) {
     // Handle search results page
