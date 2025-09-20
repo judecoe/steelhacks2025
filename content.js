@@ -760,22 +760,24 @@ function processItemPage() {
 
   mainContent.appendChild(itemContainer);
 
+  // --- TITLE ---
   const titleElement =
     document.querySelector("#x-title-label-lbl") ||
     document.querySelector("h1[id*='title']") ||
     document.querySelector("h1");
 
   if (!titleElement) return;
-
   const title = titleElement.textContent.trim();
 
-  // --- costs ---
+  // --- COSTS (ebay-side) ---
   const costs = extractItemPageCosts();
   if (costs) {
     createCostBreakdownBox(itemContainer, costs, false);
+  } else {
+    createCostBreakdownBox(itemContainer, null, true); // fallback placeholder
   }
 
-  // --- PC cost fetch ---
+  // --- PC COST FETCH (raw) ---
   chrome.runtime.sendMessage({ title, year: null, originalTitle: null }, (response) => {
     if (chrome.runtime.lastError) return;
 
@@ -797,127 +799,42 @@ function processItemPage() {
     }
   });
 
+  // --- CLEANED TITLE + SECOND API CALL ---
   const yearMatch = title.match(/\d{4}/);
   const year = yearMatch ? yearMatch[0] : null;
 
   console.log("[PokePrice] Item page original title:", title);
 
-  // Improved title cleaning for Pokemon cards (same logic as processListing)
-  let cleaned = null;
-
-  // Look for common Pokemon card patterns
-  let match = title.match(/([A-Za-z\-\s]+)#([A-Za-z0-9\/]+)/);
-  if (match) {
-    cleaned = match[1].trim() + " #" + match[2].toUpperCase();
-  } else {
-    // Look for card names with numbers (like "Charizard 4/102")
-    match = title.match(/([A-Za-z\-\s]+)([0-9]+\/[0-9A-Za-z]+)/);
-    if (match) {
-      cleaned = match[1].trim() + " #" + match[2].toUpperCase();
-    } else {
-      // Look for card names with just numbers
-      match = title.match(/([A-Za-z\-\s]+)([0-9]{1,4})\b/);
-      if (match) {
-        cleaned = match[1].trim() + " #" + match[2];
-      } else {
-        // Try to extract Pokemon names from the title
-        const pokemonPattern =
-          /(Charizard|Pikachu|Blastoise|Venusaur|Mewtwo|Mew|Lugia|Ho-Oh|Rayquaza|Groudon|Kyogre|Dialga|Palkia|Giratina|Arceus|Reshiram|Zekrom|Kyurem|Xerneas|Yveltal|Zygarde|Solgaleo|Lunala|Necrozma|Zacian|Zamazenta|Eternatus|[A-Z][a-z]+)/i;
-        const pokemonMatch = title.match(pokemonPattern);
-        if (pokemonMatch) {
-          cleaned = pokemonMatch[1];
-          // Try to find a card number after the Pokemon name
-          const numberAfter = title
-            .substring(pokemonMatch.index + pokemonMatch[1].length)
-            .match(/#?([0-9]+(?:\/[0-9]+)?)/);
-          if (numberAfter) {
-            cleaned += " #" + numberAfter[1];
-          }
-        } else {
-          // If we can't find a Pokemon name, try to extract meaningful words
-          const words = title
-            .split(/\s+/)
-            .filter(
-              (word) =>
-                word.length > 2 &&
-                !word.toLowerCase().includes("psa") &&
-                !word.toLowerCase().includes("gem") &&
-                !word.toLowerCase().includes("mint") &&
-                !word.toLowerCase().includes("graded") &&
-                !/^\d+$/.test(word) &&
-                word !== "of"
-            );
-          if (words.length > 0) {
-            cleaned = words.slice(0, 2).join(" "); // Take first 2 meaningful words
-          } else {
-            cleaned = title.split(" ")[0]; // Fallback to first word
-          }
-        }
-      }
-    }
-  }
-
-  if (!cleaned || cleaned.length < 3) {
-    // If we still don't have a good cleaned title, extract from original title
-    const words = title
-      .split(/\s+/)
-      .filter(
-        (word) =>
-          word.length > 2 &&
-          !word.toLowerCase().includes("psa") &&
-          !word.toLowerCase().includes("gem") &&
-          !word.toLowerCase().includes("mint") &&
-          !word.toLowerCase().includes("graded") &&
-          !/^\d+$/.test(word)
-      );
-    cleaned = words.slice(0, 3).join(" ") || title.split(" ")[0];
-  }
-
+  let cleaned = extractPokemonCardName(title);
   cleaned = cleaned.replace(/\s+/g, " ").trim();
 
-  // Only add PSA 10 if it's not already there
   if (!/psa\s*10/i.test(cleaned)) {
     cleaned += " PSA 10";
   }
 
-  console.log("[PokePrice] Item page cleaned title:", cleaned);
-
-  console.log("[PokePrice] Item page requesting price for:", cleaned);
-
-  // --- Fetch again with cleaned title for extra accuracy ---
   chrome.runtime.sendMessage({ title: cleaned, year }, (response) => {
     if (chrome.runtime.lastError) {
       console.error("[PokePrice] Runtime error:", chrome.runtime.lastError);
       return;
     }
-    // console.log("[PokePrice] API response:", response);
 
     if (response && response.price) {
-      createPriceTag(listing, response.price, false);
-      // console.log("[PokePrice] Updated price tag with:", response.price);
-
-      // Log the source if available
-      if (response.source) {
-        // console.log(`[PokePrice] Price source: ${response.source}`);
-      }
+      createPriceTag(itemContainer, response.price, false);
     } else {
       console.log("[PokePrice] No price found for:", cleaned);
-
-      // Log error details if available
-      if (response && response.error) {
+      if (response?.error) {
         console.warn("[PokePrice] Error details:", response.error);
-
-        // Update the tag to show error state for debugging
-        const priceTag = listing.querySelector(".pokeprice-tag");
+        const priceTag = itemContainer.querySelector(".pokeprice-tag");
         if (priceTag) {
           priceTag.innerText = "PC: Error";
           priceTag.style.background = "rgba(255,100,100,0.92)";
-          priceTag.title = response.error; // Show error on hover
+          priceTag.title = response.error;
         }
       }
     }
   });
 }
+
   
 
 
