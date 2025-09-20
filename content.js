@@ -218,6 +218,30 @@ function createPriceTag(listing, price, isPlaceholder = false) {
   }
 }
 
+function getColorGradient(ebayTotal, pcCost) {
+  if (!pcCost || isNaN(pcCost) || pcCost <= 0 || isNaN(ebayTotal)) {
+    return 'hsl(0, 0%, 80%)'; // neutral gray fallback
+  }
+
+  const ratio = ebayTotal / pcCost;
+
+  if (ratio <= 0.5) {
+    return `hsl(120, 85%, 25%)`; // dark green
+  }
+
+  if (ratio >= 1.5) {
+    return `hsl(0, 85%, 25%)`; // dark red
+  }
+
+  const t = (ratio - 0.5) / (1.5 - 0.5);
+
+  const hue = 120 * (1 - t); // 120 -> 0
+  const sat = 85;
+  const lightness = 25 + 30 * (1 - Math.abs(2 * t - 1)); // 25–55%
+
+  return `hsl(${hue.toFixed(1)}, ${sat}%, ${lightness.toFixed(1)}%)`;
+}
+
 function processListing(listing, idx) {
   if (listing.dataset.pokepriceProcessed) return;
   listing.dataset.pokepriceProcessed = "true";
@@ -228,36 +252,47 @@ function processListing(listing, idx) {
     return;
   }
 
-  //fetch pcCost from background.js
-  if (title) {
-    chrome.runtime.sendMessage(
-      { title, year: null, originalTitle: null }, 
-      (response) => {
-        const pcCost = response.price; // 💰 this comes from background.js
-
-        if (pcCost) {
-          const costs = extractCostDetails(listing);
-          createCostBreakdownBox(listing, costs, false);
-
-          const color = getColorGradient(costs, pcCost); //set color gradient based on ebayCost & pcCost 
-          const priceTag = listing.querySelector(".pokeprice-tag");
-          if (priceTag) {
-            priceTag.style.background = color;
-          }
-        }
-      }
-    );
-  }
+  // ensure relative positioning for overlay elements
   if (getComputedStyle(listing).position === "static") {
     listing.classList.add("pokeprice-rel");
   }
 
+  // create placeholders so elements always exist
   createPriceTag(listing, null, true);
   createCostBreakdownBox(listing, null, true);
 
+  // extract eBay cost immediately
   const costs = extractCostDetails(listing);
   createCostBreakdownBox(listing, costs, false);
 
+  // --- Fetch raw PC cost from background.js ---
+  chrome.runtime.sendMessage(
+    { title, year: null, originalTitle: null },
+    (response) => {
+      if (chrome.runtime.lastError) {
+        return;
+      }
+
+      const pcCostNum = response && response.price ? parseFloat(response.price) : NaN;
+      const ebayTotal = Number(costs.total) || 0;
+
+      if (pcCostNum && !isNaN(pcCostNum)) {
+        const color = getColorGradient(ebayTotal, pcCostNum);
+
+        let priceTag = listing.querySelector(".pokeprice-tag");
+        if (!priceTag) {
+          createPriceTag(listing, null, true);
+          priceTag = listing.querySelector(".pokeprice-tag");
+        }
+
+        priceTag.style.background = color;
+        priceTag.style.color = "white"; // keep text readable
+        createPriceTag(listing, pcCostNum, false);
+      }
+    }
+  );
+
+  // --- Clean up title for second query (normalized) ---
   const yearMatch = title.match(/\d{4}/);
   const year = yearMatch ? yearMatch[0] : null;
 
@@ -285,6 +320,7 @@ function processListing(listing, idx) {
     cleaned += " PSA 10";
   }
 
+  // --- Fetch again with cleaned title for extra accuracy ---
   chrome.runtime.sendMessage({ title: cleaned, year }, (response) => {
     if (chrome.runtime.lastError) {
       return;
@@ -483,19 +519,39 @@ function init() {
   }
 }
 
-function getColorGradient(ebayCost, pcCost){ //sets color gradient based on ebayCost vs. pcCost. Dark Green -> Dark Red
-  const minCost = .5 * pcCost;
-  const maxCost = 1.5 * pcCost;
-  const cost = ebayCost.total - pcCost;
+function getColorGradient(ebayTotal, pcCost) {
+  // safety
+  if (!pcCost || isNaN(pcCost) || pcCost <= 0 || isNaN(ebayTotal)) {
+    return 'hsl(0, 0%, 80%)'; // neutral gray as fallback
+  }
 
-  const ratio = Math.min(Math.max((cost - minCost) / (maxCost - minCost), 0), 1);
+  const ratio = ebayTotal / pcCost;
 
-  const r = Math.round(0 + ratio * (139 - 0));
-  const g = Math.round(100 + ratio * (0 - 100));
-  const b = 0;
+  // dark green (<= 0.5)
+  if (ratio <= 0.5) {
+    return `hsl(120, 85%, 25%)`; // dark green
+  }
 
-  return `rgb(${r}, ${g}, ${b})`;
+  // dark red (>= 1.5)
+  if (ratio >= 1.5) {
+    return `hsl(0, 85%, 25%)`; // dark red
+  }
 
+  // normalize [0.5, 1.5] -> t in [0,1]
+  const t = (ratio - 0.5) / (1.5 - 0.5); // same as ratio - 0.5
+
+  // hue: 120 -> 0 (green -> red)
+  const hue = 120 * (1 - t);
+
+  // saturation: keep high so colors are vivid
+  const sat = 85;
+
+  // lightness: triangular shape that peaks in the middle
+  // L ranges from 25% (dark ends) up to 55% (bright middle)
+  const lightness = 25 + 30 * (1 - Math.abs(2 * t - 1)); 
+  // explanation: at t=0 or t=1 => L=25; at t=0.5 => L=55
+
+  return `hsl(${hue.toFixed(1)}, ${sat}%, ${lightness.toFixed(1)}%)`;
 }
 
 // Start initialization
