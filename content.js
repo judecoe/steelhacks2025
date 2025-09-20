@@ -7,7 +7,6 @@ function injectPokePriceStyles() {
       position: absolute !important;
       right: 10px;
       bottom: 10px;
-      background: rgba(255,255,0,0.92);
       padding: 3px 8px;
       font-size: 13px;
       font-weight: bold;
@@ -152,9 +151,10 @@ function extractCostDetails(listing) {
     const priceText = priceElement.textContent.trim();
     // console.log("[PokePrice] Price element text:", priceText);
     const priceMatch = priceText.match(/\$([0-9,]+\.?[0-9]*)/);
-    if (priceMatch) {
-      costs.price = parseFloat(priceMatch[1].replace(/,/g, ""));
-      // console.log("[PokePrice] Extracted price:", costs.price);
+    const priceMatches = priceText.match(/\$([0-9,]+\.?[0-9]*)/g);
+    if (priceMatches) {
+      const prices = priceMatches.map(p => parseFloat(p.replace(/[^0-9.]/g, "")));
+      costs.price = Math.min(...prices);
     }
   } else {
     console.log("[PokePrice] No price element found");
@@ -162,6 +162,7 @@ function extractCostDetails(listing) {
 
   const shippingSelectors = [
     ".s-card__attribute-row span.su-styled-text.secondary.large",
+    "span.su-styled-text.positive.bold.large",
     "span.su-styled-text.secondary.large",
     ".s-item__shipping",
     ".s-item__detail--secondary",
@@ -187,7 +188,7 @@ function extractCostDetails(listing) {
         text.toLowerCase().includes("delivery") ||
         text.toLowerCase().includes("shipping") ||
         text.match(/\+?\$[0-9,]+\.?[0-9]*/) ||
-        text.toLowerCase().includes("free shipping")
+        text.toLowerCase().includes("free delivery")
       ) {
         // console.log(`[PokePrice] Found shipping text: "${text}"`);
         shippingElement = element;
@@ -200,18 +201,18 @@ function extractCostDetails(listing) {
   }
 
   if (shippingElement) {
-    // console.log("[PokePrice] Final shipping element text:", foundShippingText);
-    if (foundShippingText.toLowerCase().includes("free")) {
+    console.log("[PokePrice] Final shipping element text:", foundShippingText);
+    if (foundShippingText.toLowerCase().startsWith("free delivery")) {
       costs.shipping = 0;
-      // console.log("[PokePrice] Free shipping detected");
+      console.log("[PokePrice] Free delivery detected");
     } else {
-      const shippingMatch = foundShippingText.match(/\+?\$([0-9,]+\.?[0-9]*)/);
-      // console.log("[PokePrice] Shipping regex match:", shippingMatch);
+      const shippingMatch = foundShippingText.match(/\$([0-9,]+\.?[0-9]*)/);
       if (shippingMatch) {
         costs.shipping = parseFloat(shippingMatch[1].replace(/,/g, ""));
         // console.log("[PokePrice] Extracted shipping:", costs.shipping);
       }
     }
+
   } else {
     // console.log("[PokePrice] No shipping element found");
   }
@@ -548,16 +549,47 @@ function processListing(listing, idx) {
     return;
   }
 
+  // ensure relative positioning for overlay elements
   if (getComputedStyle(listing).position === "static") {
     listing.classList.add("pokeprice-rel");
   }
 
+  // create placeholders so elements always exist
   createPriceTag(listing, null, true);
   createCostBreakdownBox(listing, null, true);
 
+  // extract eBay cost immediately
   const costs = extractCostDetails(listing);
   createCostBreakdownBox(listing, costs, false);
 
+  // --- Fetch raw PC cost from background.js ---
+  chrome.runtime.sendMessage(
+    { title, year: null, originalTitle: null },
+    (response) => {
+      if (chrome.runtime.lastError) {
+        return;
+      }
+
+      const pcCostNum = response && response.price ? parseFloat(response.price) : NaN;
+      const ebayTotal = Number(costs.total) || 0;
+
+      if (pcCostNum && !isNaN(pcCostNum)) {
+        const color = getColorGradient(ebayTotal, pcCostNum);
+
+        let priceTag = listing.querySelector(".pokeprice-tag");
+        if (!priceTag) {
+          createPriceTag(listing, null, true);
+          priceTag = listing.querySelector(".pokeprice-tag");
+        }
+
+        priceTag.style.background = color;
+        priceTag.style.color = "white"; // keep text readable
+        createPriceTag(listing, pcCostNum, false);
+      }
+    }
+  );
+
+  // --- Clean up title for second query (normalized) ---
   const yearMatch = title.match(/\d{4}/);
   const year = yearMatch ? yearMatch[0] : null;
 
@@ -576,6 +608,7 @@ function processListing(listing, idx) {
   // console.log("[PokePrice] Will search for:", cleaned);
   // console.log("[PokePrice] ================================");
 
+  // --- Fetch again with cleaned title for extra accuracy ---
   chrome.runtime.sendMessage({ title: cleaned, year }, (response) => {
     if (chrome.runtime.lastError) {
       console.error("[PokePrice] Runtime error:", chrome.runtime.lastError);
@@ -612,7 +645,7 @@ function processListing(listing, idx) {
 
 function processAllListings() {
   const listings = document.querySelectorAll(".su-card-container");
-
+  
   if (listings.length === 0) {
     return;
   }
@@ -955,6 +988,41 @@ function init() {
     // Start observing for new listings on search pages
     observer.observe(document.body, { childList: true, subtree: true });
   }
+}
+
+function getColorGradient(ebayTotal, pcCost) {
+  // safety
+  if (!pcCost || isNaN(pcCost) || pcCost <= 0 || isNaN(ebayTotal)) {
+    return 'hsl(0, 0%, 80%)'; // neutral gray as fallback
+  }
+
+  const ratio = ebayTotal / pcCost;
+
+  // dark green (<= 0.5)
+  if (ratio <= 0.5) {
+    return `hsl(120, 85%, 25%)`; // dark green
+  }
+
+  // dark red (>= 1.5)
+  if (ratio >= 1.5) {
+    return `hsl(0, 85%, 25%)`; // dark red
+  }
+
+  // normalize [0.5, 1.5] -> t in [0,1]
+  const t = (ratio - 0.5) / (1.5 - 0.5); // same as ratio - 0.5
+
+  // hue: 120 -> 0 (green -> red)
+  const hue = 120 * (1 - t);
+
+  // saturation: keep high so colors are vivid
+  const sat = 85;
+
+  // lightness: triangular shape that peaks in the middle
+  // L ranges from 25% (dark ends) up to 55% (bright middle)
+  const lightness = 25 + 30 * (1 - Math.abs(2 * t - 1)); 
+  // explanation: at t=0 or t=1 => L=25; at t=0.5 => L=55
+
+  return `hsl(${hue.toFixed(1)}, ${sat}%, ${lightness.toFixed(1)}%)`;
 }
 
 // Start initialization
