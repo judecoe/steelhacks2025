@@ -851,6 +851,12 @@ function extractItemPageCosts() {
   // Look for price on item page
   const priceSelectors = [
     "span.ux-textspans",
+    "span.su-styled-text.primary.bold.large-1.s-card__price",
+    ".s-item__price",
+    ".notranslate",
+    "span[class*='price']",
+    "span[class*='su-styled-text'][class*='primary']",
+    ".s-item__detail--primary",
     ".price-current",
     ".display-price",
     ".notranslate",
