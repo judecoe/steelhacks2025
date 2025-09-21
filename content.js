@@ -604,7 +604,7 @@ function processListing(listing, idx) {
   // console.log("[PokePrice] ================================");
 
   // --- Fetch again with cleaned title for extra accuracy ---
-  chrome.runtime.sendMessage({ title: cleaned, year }, (response) => {
+/*   chrome.runtime.sendMessage({ title: cleaned, year }, (response) => {
     if (chrome.runtime.lastError) {
       console.error("[PokePrice] Runtime error:", chrome.runtime.lastError);
       return;
@@ -635,7 +635,7 @@ function processListing(listing, idx) {
         }
       }
     }
-  });
+  }); */
 }
 
 function processAllListings() {
