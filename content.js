@@ -18,53 +18,6 @@ function injectPokePriceStyles() {
     }
     .pokeprice-cost-box {
       position: absolute !// Add function to test API key
-window.testAPIKey = function() {
-  console.log("[PokePrice] Testing API key validity...");
-  chrome.runtime.sendMessage({ testAPIKey: true }, (response) => {
-    console.log("[PokePrice] API key test result:", response);
-  });
-};
-
-// Debug function to test title extraction
-window.testTitleExtraction = function(title) {
-  console.log("===== TESTING TITLE EXTRACTION =====");
-  const result = extractPokemonCardName(title, true); // Enable verbose mode
-  console.log("Input:", title);
-  console.log("Output:", result);
-  console.log("=====================================");
-  return result;
-};
-
-// Debug function to test a search
-window.testPokeSearch = function(searchTerm) {
-  console.log("===== TESTING SEARCH =====");
-  chrome.runtime.sendMessage({ title: searchTerm, year: null }, (response) => {
-    console.log("Search term:", searchTerm);
-    console.log("Response:", response);
-    if (response) {
-      if (response.price) {
-        console.log("SUCCESS: Found price: $" + response.price);
-        if (response.source) {
-          console.log("Source: " + response.source);
-        }
-      } else {
-        console.log("FAILURE: No price found");
-        if (response.error) {
-          console.log("Error: " + response.error);
-        }
-      }
-    }
-    console.log("==========================");
-  });
-};
-
-// Add function to test scraping from page
-window.testSingleAPI = function() {
-  console.log("[PokePrice] Testing single product API...");
-  chrome.runtime.sendMessage({ testSingleAPI: true }, (response) => {
-    console.log("[PokePrice] Single API test result:", response);
-  });
-};nt;
       right: 10px;
       bottom: 35px;
       background: rgba(255,255,255,0.95);
