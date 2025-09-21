@@ -875,12 +875,12 @@ function extractItemPageCosts() {
     priceElement = elements[i];
     console.log("PRICEELEMENT: ", priceElement);
     priceText = priceElement.textContent.trim();
-    priceMatch = priceText.match(/(\w+)$([0-9,]+\.?[0-9]*)/);
+    priceMatch = priceText.match(/\d+\.\d{2}/);
     if(priceMatch != null){
-      console.log("parsefloat: ", priceMatch[2]);
+      console.log("parsefloat: ", priceMatch[0]);
     }
     console.log('PRICEMATCH: ', priceMatch);
-    if(priceMatch != null && !isNaN(parseFloat(priceMatch[2].replace(/,/g, ""))) && (priceElement.textContent.trim()).includes("US")){
+    if(priceMatch != null && !isNaN(parseFloat(priceMatch[0].replace(/,/g, ""))) && (priceElement.textContent.trim()).includes("US")){
       break;
     }
     i++;
