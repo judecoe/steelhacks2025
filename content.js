@@ -873,7 +873,7 @@ function extractItemPageCosts() {
     priceElement = document.querySelector(priceSelectors);
     console.log("PRICEELEMENT: ", priceElement);
     console.log("parsefloat: ", parseFloat(priceElement.textContent.trim()));
-    if(parseFloat(priceElement.textContent.trim()) != NaN){
+    if(!isNaN(parseFloat(priceElement.textContent.trim()))){
       break;
     }
   }
