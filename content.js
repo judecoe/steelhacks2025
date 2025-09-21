@@ -583,7 +583,7 @@ function processListing(listing, idx) {
         }
 
         priceTag.style.background = color;
-        priceTag.style.color = "white"; // keep text readable
+        priceTag.style.color = "black"; // keep text readable
         createPriceTag(listing, pcCostNum, false);
       }
     }
@@ -797,7 +797,7 @@ function processItemPage() {
       }
 
       priceTag.style.background = color;
-      priceTag.style.color = "white";
+      priceTag.style.color = "black";
       createPriceTag(itemContainer, pcCostNum, false);
     }
   });
