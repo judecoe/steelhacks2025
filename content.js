@@ -875,7 +875,7 @@ function extractItemPageCosts() {
     priceElement = elements[i];
     console.log("PRICEELEMENT: ", priceElement);
     console.log("parsefloat: ", parseFloat(priceElement.textContent.trim()));
-    if(!isNaN(parseFloat(priceElement.textContent.trim())) && priceElement.includes("US")){
+    if(!isNaN(parseFloat(priceElement.textContent.trim())) && (priceElement.textContent.trim()).includes("US")){
       break;
     }
     i++;
