@@ -165,55 +165,34 @@ function extractCostDetails(listing) {
     "span", // Check all spans as last resort
   ];
 
-/*   let shippingElement = null;
+  let shippingElement = null;
   let foundShippingText = "";
 
   for (const selector of shippingSelectors) {
-    if(selector == "span.su-styled-text.secondary.large"){
-      const elements = listing.querySelectorAll("span.su-styled-text.secondary.large");
-      let i = 0;
-      while(i < elements.length){
-        shippingElement = elements[i];
-        console.log("PRICEELEMENT: ", shippingElement);
-        shippingText = shippingElement.textContent.trim();
-        shippingMatch = shippingText.match(/\d+\.\d{2}/);
-        if(shippingMatch != null){
-          console.log("parsefloat: ", shippingMatch[0]);
-        }
-        console.log('PRICEMATCH: ', shippingMatch);
-        if(shippingMatch != null && !isNaN(parseFloat(shippingMatch[0].replace(/,/g, ""))) && (! shippingElement.textContent.trim()).includes("Was:")){
-          break;
-        }
-        i++;
+    const elements = listing.querySelectorAll(selector);
+    // Reduced shipping selector logging to prevent spam
+    // console.log(`[PokePrice] Shipping selector "${selector}": found ${elements.length} elements`);
+
+    for (const element of elements) {
+      const text = element.textContent.trim();
+      // console.log(`[PokePrice] Checking element text: "${text}"`);
+
+      if (
+        text.toLowerCase().includes("delivery") ||
+        text.toLowerCase().includes("shipping") ||
+        text.match(/\+?\$[0-9,]+\.?[0-9]*/) ||
+        text.toLowerCase().includes("free delivery") && 
+        ! text.toLowerCase().includes("was")
+      ) {
+        // console.log(`[PokePrice] Found shipping text: "${text}"`);
+        shippingElement = element;
+        foundShippingText = text;
+        break;
       }
-    } else { */
-  const elements = listing.querySelectorAll(selector);
-  // Reduced shipping selector logging to prevent spam
-  // console.log(`[PokePrice] Shipping selector "${selector}": found ${elements.length} elements`);
-
-  for (const element of elements) {
-    const text = element.textContent.trim();
-    // console.log(`[PokePrice] Checking element text: "${text}"`);
-
-    if (
-      (text.toLowerCase().includes("delivery") ||
-      text.toLowerCase().includes("shipping") ||
-      text.match(/\+?\$[0-9,]+\.?[0-9]*/) ||
-      text.toLowerCase().includes("free delivery")) && 
-      ! text.toLowerCase().includes("was")
-
-    ) {
-      // console.log(`[PokePrice] Found shipping text: "${text}"`);
-      shippingElement = element;
-      foundShippingText = text;
-      break;
     }
-  
-
 
     if (shippingElement) break;
   }
-
 
   if (shippingElement) {
     console.log("[PokePrice] Final shipping element text:", foundShippingText);
