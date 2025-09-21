@@ -17,7 +17,7 @@ function injectPokePriceStyles() {
       width: fit-content;
     }
     .pokeprice-cost-box {
-      position: absolute !// Add function to test API key
+      position: absolute !important;
       right: 10px;
       bottom: 35px;
       background: rgba(255,255,255,0.95);
