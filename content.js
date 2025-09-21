@@ -148,15 +148,10 @@ function extractCostDetails(listing) {
   }
 
   if (priceElement) {
-    const priceText = priceElement.textContent.trim();
-    // console.log("[PokePrice] Price element text:", priceText);
-    const priceMatch = priceText.match(/\$([0-9,]+\.?[0-9]*)/);
-    const priceMatches = priceText.match(/\$([0-9,]+\.?[0-9]*)/g);
-    if (priceMatches) {
-      const prices = priceMatches.map(p => parseFloat(p.replace(/[^0-9.]/g, "")));
-      costs.price = Math.max(...prices);
-    }
-  } else {
+    priceText = priceElement.textContent.trim();
+    priceMatch = priceText.match(/\d+\.\d{2}/);
+    costs.price = priceMatch[0]; 
+  }  else {
     console.log("[PokePrice] No price element found");
   }
 
@@ -887,15 +882,10 @@ function extractItemPageCosts() {
   }
 
   if (priceElement) {
-    const priceText = priceElement.textContent.trim();
-    console.log("[PokePrice] Price element text:", priceText);
-    const priceMatch = priceText.match(/\$([0-9,]+\.?[0-9]*)/);
-    const priceMatches = priceText.match(/\$([0-9,]+\.?[0-9]*)/g);
-    if (priceMatches) {
-      const prices = priceMatches.map(p => parseFloat(p.replace(/[^0-9.]/g, "")));
-      costs.price = Math.max(...prices);
-    }
-  } else {
+    priceText = priceElement.textContent.trim();
+    priceMatch = priceText.match(/\d+\.\d{2}/);
+    costs.price = priceMatch[0];
+    } else {
     console.log("[PokePrice] No price element found");
   }
 
