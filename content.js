@@ -214,7 +214,7 @@ function extractCostDetails(listing) {
   costs.tax = (costs.price + costs.shipping) * taxRate;
 
   costs.total = costs.price + costs.shipping + costs.tax;
-
+  console.log("price, shipping, tax: ", costs.price, costs.shipping, costs.tax);
   return costs;
 }
 
