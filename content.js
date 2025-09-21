@@ -4,6 +4,7 @@ function injectPokePriceStyles() {
   style.id = "pokeprice-style";
   style.textContent = `
     .pokeprice-tag {
+      order: 1;
       position: absolute !important;
       right: 10px;
       bottom: 10px;
@@ -17,6 +18,7 @@ function injectPokePriceStyles() {
       width: fit-content;
     }
     .pokeprice-cost-box {
+      order: 2;
       position: absolute !important;
       right: 10px;
       bottom: 35px;
