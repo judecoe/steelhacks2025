@@ -175,7 +175,7 @@ function extractCostDetails(listing) {
 
     for (const element of elements) {
       const text = element.textContent.trim();
-      // console.log(`[PokePrice] Checking element text: "${text}"`);
+      console.log(`[PokePrice] Checking element text: "${text}"`);
       if(text.toLowerCase().includes('was')){
         continue;
       }else if(
