@@ -874,11 +874,11 @@ function extractItemPageCosts() {
     // Reduced logging to prevent spam
     // console.log(`[PokePrice] Price selector "${selector}":`, !!priceElement);
     if (priceElement) {
-      // console.log(
-      //   `[PokePrice] Found price element:`,
-      //   priceElement.textContent.trim()
-      // );
-      break;
+      const priceText = priceElement.textContent.trim();
+      console.log("PRICETEXT: ", priceText);
+      if(parseFloat(priceText) != NaN){
+        break;
+      }
     }
   }
 
