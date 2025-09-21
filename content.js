@@ -48,7 +48,7 @@ function injectPokePriceStyles() {
     .pokeprice-item-page-container {
       position: absolute !important;
       top: 162px;
-      right: 180px;
+      right: 160px;
       z-index: 1000;
       display: flex;              /* line up children horizontally */
       align-items: center;        /* vertically center them */
