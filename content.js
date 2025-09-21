@@ -30,6 +30,7 @@ function injectPokePriceStyles() {
       pointer-events: none;
       width: fit-content;
     }
+    
     .pokeprice-cost-line {
       display: flex;
       justify-content: space-between;
@@ -46,8 +47,8 @@ function injectPokePriceStyles() {
     }
     .pokeprice-item-page-container {
       position: fixed !important;
-      top: 20px;
-      right: 20px;
+      top: 110px;
+      right: 110px;
       z-index: 1000;
     }
     .pokeprice-item-page-container .pokeprice-tag {
