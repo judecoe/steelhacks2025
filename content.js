@@ -6,77 +6,31 @@ function injectPokePriceStyles() {
     .pokeprice-tag {
       position: absolute !important;
       right: 10px;
-      bottom: 10px;
-      padding: 3px 8px;
+      bottom: 75px;
+      padding: 4px 8px;
       font-size: 13px;
       font-weight: bold;
-      border-radius: 4px;
+      border-radius: 5px;
       z-index: 10;
       box-shadow: 0 1px 4px rgba(0,0,0,0.12);
       pointer-events: none;
       width: fit-content;
     }
     .pokeprice-cost-box {
-      position: absolute !// Add function to test API key
-window.testAPIKey = function() {
-  console.log("[PokePrice] Testing API key validity...");
-  chrome.runtime.sendMessage({ testAPIKey: true }, (response) => {
-    console.log("[PokePrice] API key test result:", response);
-  });
-};
-
-// Debug function to test title extraction
-window.testTitleExtraction = function(title) {
-  console.log("===== TESTING TITLE EXTRACTION =====");
-  const result = extractPokemonCardName(title, true); // Enable verbose mode
-  console.log("Input:", title);
-  console.log("Output:", result);
-  console.log("=====================================");
-  return result;
-};
-
-// Debug function to test a search
-window.testPokeSearch = function(searchTerm) {
-  console.log("===== TESTING SEARCH =====");
-  chrome.runtime.sendMessage({ title: searchTerm, year: null }, (response) => {
-    console.log("Search term:", searchTerm);
-    console.log("Response:", response);
-    if (response) {
-      if (response.price) {
-        console.log("SUCCESS: Found price: $" + response.price);
-        if (response.source) {
-          console.log("Source: " + response.source);
-        }
-      } else {
-        console.log("FAILURE: No price found");
-        if (response.error) {
-          console.log("Error: " + response.error);
-        }
-      }
-    }
-    console.log("==========================");
-  });
-};
-
-// Add function to test scraping from page
-window.testSingleAPI = function() {
-  console.log("[PokePrice] Testing single product API...");
-  chrome.runtime.sendMessage({ testSingleAPI: true }, (response) => {
-    console.log("[PokePrice] Single API test result:", response);
-  });
-};nt;
+      position: absolute !important;
       right: 10px;
-      bottom: 35px;
+      bottom: 30px;
       background: rgba(255,255,255,0.95);
       border: 1px solid #ddd;
-      padding: 6px 8px;
-      font-size: 11px;
-      border-radius: 4px;
+      padding: 5px 8px;
+      font-size: 13px;
+      border-radius: 5px;
       z-index: 10;
       box-shadow: 0 1px 4px rgba(0,0,0,0.12);
       pointer-events: none;
       width: fit-content;
     }
+    
     .pokeprice-cost-line {
       display: flex;
       justify-content: space-between;
@@ -92,21 +46,32 @@ window.testSingleAPI = function() {
       position: relative !important;
     }
     .pokeprice-item-page-container {
-      position: fixed !important;
-      top: 20px;
-      right: 20px;
+      position: absolute !important;
+      top: 162px;
+      right: 160px;
       z-index: 1000;
+      display: flex;              /* line up children horizontally */
+      align-items: center;        /* vertically center them */
+      justify-content: flex-end;  /* push both to the right side */
     }
     .pokeprice-item-page-container .pokeprice-tag {
+      padding: 5px 10px;
+      font-size: 15px;
+      border-radius: 6px;
+      order: 1;
       position: relative !important;
       right: auto;
       bottom: auto;
-      margin-bottom: 5px;
     }
     .pokeprice-item-page-container .pokeprice-cost-box {
+      padding: 6px 10px;
+      font-size: 15px;
+      border-radius: 6px;
+      order: 2;
       position: relative !important;
       right: auto;
       bottom: auto;
+      margin-left: 25px
     }
   `;
   document.head.appendChild(style);
@@ -747,7 +712,6 @@ function processAllListings() {
 function processItemPage() {
   const itemContainer = document.createElement("div");
   itemContainer.className = "pokeprice-item-page-container";
-  itemContainer.style.position = "relative";
 
   const mainContent =
     document.querySelector("#mainContent") ||
