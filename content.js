@@ -46,19 +46,19 @@ function injectPokePriceStyles() {
       position: relative !important;
     }
     .pokeprice-item-page-container {
-      position: fixed !important;
-      top: 110px;
-      right: 110px;
+      position: absolute !important;
+      top: 330px;
+      right: 330px;
       z-index: 1000;
     }
     .pokeprice-item-page-container .pokeprice-tag {
-      position: relative !important;
+      position: absolute !important;
       right: auto;
       bottom: auto;
       margin-bottom: 5px;
     }
     .pokeprice-item-page-container .pokeprice-cost-box {
-      position: relative !important;
+      position: absolute !important;
       right: auto;
       bottom: auto;
     }
