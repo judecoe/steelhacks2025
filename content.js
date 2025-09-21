@@ -139,24 +139,17 @@ function extractCostDetails(listing) {
     // Reduced logging to prevent spam
     // console.log(`[PokePrice] Price selector "${selector}":`, !!priceElement);
     if (priceElement) {
-      // console.log(
-      //   `[PokePrice] Found price element:`,
-      //   priceElement.textContent.trim()
-      // );
+
       break;
     }
   }
 
   if (priceElement) {
-    const priceText = priceElement.textContent.trim();
-    // console.log("[PokePrice] Price element text:", priceText);
-    const priceMatch = priceText.match(/\$([0-9,]+\.?[0-9]*)/);
-    const priceMatches = priceText.match(/\$([0-9,]+\.?[0-9]*)/g);
-    if (priceMatches) {
-      const prices = priceMatches.map(p => parseFloat(p.replace(/[^0-9.]/g, "")));
-      costs.price = Math.min(...prices);
-    }
-  } else {
+    priceText = priceElement.textContent.trim();
+    priceMatch = priceText.match(/\d+\.\d{2}/);
+    console.log("PRICEMATCH: ", priceMatch);
+    costs.price = parseFloat(priceMatch[0].replace(/,/g, ""))
+  }  else {
     console.log("[PokePrice] No price element found");
   }
 
@@ -179,12 +172,17 @@ function extractCostDetails(listing) {
     const elements = listing.querySelectorAll(selector);
     // Reduced shipping selector logging to prevent spam
     // console.log(`[PokePrice] Shipping selector "${selector}": found ${elements.length} elements`);
-
+    check = false;
     for (const element of elements) {
       const text = element.textContent.trim();
-      // console.log(`[PokePrice] Checking element text: "${text}"`);
-
-      if (
+      console.log(`[PokePrice] Checking element text: "${text}"`);
+      if(text.toLowerCase().includes('was')){
+        check = true;
+        continue;
+      }else if(check == true){
+        check = false;
+        continue;
+      }else if(
         text.toLowerCase().includes("delivery") ||
         text.toLowerCase().includes("shipping") ||
         text.match(/\+?\$[0-9,]+\.?[0-9]*/) ||
@@ -221,7 +219,7 @@ function extractCostDetails(listing) {
   costs.tax = (costs.price + costs.shipping) * taxRate;
 
   costs.total = costs.price + costs.shipping + costs.tax;
-
+  console.log("price, shipping, tax: ", costs.price, costs.shipping, costs.tax);
   return costs;
 }
 
@@ -244,7 +242,7 @@ function createCostBreakdownBox(listing, costs, isPlaceholder = false) {
     costBox.innerHTML = `
       <div class="pokeprice-cost-total">
         <span>Total:</span>
-        <span>$${costs.total.toFixed(2)}</span>
+        <span>$${(costs.total).toFixed(2)}</span>
       </div>
     `;
   }
@@ -583,13 +581,13 @@ function processListing(listing, idx) {
         }
 
         priceTag.style.background = color;
-        priceTag.style.color = "white"; // keep text readable
+        priceTag.style.color = "black"; // keep text readable
         createPriceTag(listing, pcCostNum, false);
       }
     }
   );
 
-  // --- Clean up title for second query (normalized) ---
+  /* // --- Clean up title for second query (normalized) ---
   const yearMatch = title.match(/\d{4}/);
   const year = yearMatch ? yearMatch[0] : null;
 
@@ -601,7 +599,7 @@ function processListing(listing, idx) {
   // Only add PSA 10 if it's not already there
   if (!/psa\s*10/i.test(cleaned)) {
     cleaned += " PSA 10";
-  }
+  } */
 
   // Reduced logging since we have summary view
   // console.log("[PokePrice] ===== FINAL SEARCH TERM =====");
@@ -609,7 +607,7 @@ function processListing(listing, idx) {
   // console.log("[PokePrice] ================================");
 
   // --- Fetch again with cleaned title for extra accuracy ---
-  chrome.runtime.sendMessage({ title: cleaned, year }, (response) => {
+/*   chrome.runtime.sendMessage({ title: cleaned, year }, (response) => {
     if (chrome.runtime.lastError) {
       console.error("[PokePrice] Runtime error:", chrome.runtime.lastError);
       return;
@@ -640,7 +638,7 @@ function processListing(listing, idx) {
         }
       }
     }
-  });
+  }); */
 }
 
 function processAllListings() {
@@ -756,129 +754,92 @@ function processItemPage() {
     document.querySelector(".notranslate") ||
     document.body;
 
-  if (mainContent) {
-    mainContent.appendChild(itemContainer);
+  if (!mainContent) return;
 
-    const titleElement =
-      document.querySelector("#x-title-label-lbl") ||
-      document.querySelector("h1[id*='title']") ||
-      document.querySelector("h1");
+  mainContent.appendChild(itemContainer);
 
-    if (titleElement) {
-      const title = titleElement.textContent.trim();
+  // --- TITLE ---
+  const titleElement =
+    document.querySelector("#x-title-label-lbl") ||
+    document.querySelector("h1[id*='title']") ||
+    document.querySelector("h1");
 
-      createPriceTag(itemContainer, null, true);
-      createCostBreakdownBox(itemContainer, null, true);
+  if (!titleElement) return;
+  const title = titleElement.textContent.trim();
 
-      const costs = extractItemPageCosts();
-      createCostBreakdownBox(itemContainer, costs, false);
+  // --- COSTS (ebay-side) ---
+  const costs = extractItemPageCosts();
 
-      const yearMatch = title.match(/\d{4}/);
-      const year = yearMatch ? yearMatch[0] : null;
+  console.log("ITEM PAGE COST: ", costs.total);
 
-      console.log("[PokePrice] Item page original title:", title);
-
-      // Improved title cleaning for Pokemon cards (same logic as processListing)
-      let cleaned = null;
-
-      // Look for common Pokemon card patterns
-      let match = title.match(/([A-Za-z\-\s]+)#([A-Za-z0-9\/]+)/);
-      if (match) {
-        cleaned = match[1].trim() + " #" + match[2].toUpperCase();
-      } else {
-        // Look for card names with numbers (like "Charizard 4/102")
-        match = title.match(/([A-Za-z\-\s]+)([0-9]+\/[0-9A-Za-z]+)/);
-        if (match) {
-          cleaned = match[1].trim() + " #" + match[2].toUpperCase();
-        } else {
-          // Look for card names with just numbers
-          match = title.match(/([A-Za-z\-\s]+)([0-9]{1,4})\b/);
-          if (match) {
-            cleaned = match[1].trim() + " #" + match[2];
-          } else {
-            // Try to extract Pokemon names from the title
-            const pokemonPattern =
-              /(Charizard|Pikachu|Blastoise|Venusaur|Mewtwo|Mew|Lugia|Ho-Oh|Rayquaza|Groudon|Kyogre|Dialga|Palkia|Giratina|Arceus|Reshiram|Zekrom|Kyurem|Xerneas|Yveltal|Zygarde|Solgaleo|Lunala|Necrozma|Zacian|Zamazenta|Eternatus|[A-Z][a-z]+)/i;
-            const pokemonMatch = title.match(pokemonPattern);
-            if (pokemonMatch) {
-              cleaned = pokemonMatch[1];
-              // Try to find a card number after the Pokemon name
-              const numberAfter = title
-                .substring(pokemonMatch.index + pokemonMatch[1].length)
-                .match(/#?([0-9]+(?:\/[0-9]+)?)/);
-              if (numberAfter) {
-                cleaned += " #" + numberAfter[1];
-              }
-            } else {
-              // If we can't find a Pokemon name, try to extract meaningful words
-              const words = title
-                .split(/\s+/)
-                .filter(
-                  (word) =>
-                    word.length > 2 &&
-                    !word.toLowerCase().includes("psa") &&
-                    !word.toLowerCase().includes("gem") &&
-                    !word.toLowerCase().includes("mint") &&
-                    !word.toLowerCase().includes("graded") &&
-                    !/^\d+$/.test(word) &&
-                    word !== "of"
-                );
-              if (words.length > 0) {
-                cleaned = words.slice(0, 2).join(" "); // Take first 2 meaningful words
-              } else {
-                cleaned = title.split(" ")[0]; // Fallback to first word
-              }
-            }
-          }
-        }
-      }
-
-      if (!cleaned || cleaned.length < 3) {
-        // If we still don't have a good cleaned title, extract from original title
-        const words = title
-          .split(/\s+/)
-          .filter(
-            (word) =>
-              word.length > 2 &&
-              !word.toLowerCase().includes("psa") &&
-              !word.toLowerCase().includes("gem") &&
-              !word.toLowerCase().includes("mint") &&
-              !word.toLowerCase().includes("graded") &&
-              !/^\d+$/.test(word)
-          );
-        cleaned = words.slice(0, 3).join(" ") || title.split(" ")[0];
-      }
-
-      cleaned = cleaned.replace(/\s+/g, " ").trim();
-
-      // Only add PSA 10 if it's not already there
-      if (!/psa\s*10/i.test(cleaned)) {
-        cleaned += " PSA 10";
-      }
-
-      console.log("[PokePrice] Item page cleaned title:", cleaned);
-
-      console.log("[PokePrice] Item page requesting price for:", cleaned);
-
-      chrome.runtime.sendMessage({ title: cleaned, year }, (response) => {
-        if (chrome.runtime.lastError) {
-          console.error("[PokePrice] Runtime error:", chrome.runtime.lastError);
-          return;
-        }
-        console.log("[PokePrice] Item page API response:", response);
-        if (response && response.price) {
-          createPriceTag(itemContainer, response.price, false);
-          console.log(
-            "[PokePrice] Updated item page price tag with:",
-            response.price
-          );
-        } else {
-          console.log("[PokePrice] No price found for item page:", cleaned);
-        }
-      });
-    }
+  if (costs) {
+    createCostBreakdownBox(itemContainer, costs, false);
+  } else {
+    createCostBreakdownBox(itemContainer, null, true); // fallback placeholder
   }
+
+  // --- PC COST FETCH (raw) ---
+  chrome.runtime.sendMessage({ title, year: null, originalTitle: null }, (response) => {
+    if (chrome.runtime.lastError) return;
+
+    const pcCostNum = response && response.price ? parseFloat(response.price) : NaN;
+    const ebayTotal = Number(costs?.total) || 0;
+
+    if (pcCostNum && !isNaN(pcCostNum)) {
+      const color = getColorGradient(ebayTotal, pcCostNum);
+
+      let priceTag = itemContainer.querySelector(".pokeprice-tag");
+      if (!priceTag) {
+        createPriceTag(itemContainer, null, true);
+        priceTag = itemContainer.querySelector(".pokeprice-tag");
+      }
+
+      priceTag.style.background = color;
+      priceTag.style.color = "black";
+      createPriceTag(itemContainer, pcCostNum, false);
+    }
+  });
+
+  // --- CLEANED TITLE + SECOND API CALL ---
+  const yearMatch = title.match(/\d{4}/);
+  const year = yearMatch ? yearMatch[0] : null;
+
+  console.log("[PokePrice] Item page original title:", title);
+
+  let cleaned = extractPokemonCardName(title);
+  cleaned = cleaned.replace(/\s+/g, " ").trim();
+
+  if (!/psa\s*10/i.test(cleaned)) {
+    cleaned += " PSA 10";
+  }
+
+  chrome.runtime.sendMessage({ title: cleaned, year }, (response) => {
+    if (chrome.runtime.lastError) {
+      console.error("[PokePrice] Runtime error:", chrome.runtime.lastError);
+      return;
+    }
+
+    if (response && response.price) {
+      createPriceTag(itemContainer, response.price, false);
+    } else {
+      console.log("[PokePrice] No price found for:", cleaned);
+      if (response?.error) {
+        console.warn("[PokePrice] Error details:", response.error);
+        const priceTag = itemContainer.querySelector(".pokeprice-tag");
+        if (priceTag) {
+          priceTag.innerText = "PC: Error";
+          priceTag.style.background = "rgba(255,100,100,0.92)";
+          priceTag.title = response.error;
+        }
+      }
+    }
+  });
 }
+
+  
+
+
+
 
 function extractItemPageCosts() {
   const costs = {
@@ -889,51 +850,96 @@ function extractItemPageCosts() {
   };
 
   // Look for price on item page
-  const priceSelectors = [
-    ".price-current",
-    ".display-price",
-    ".notranslate",
-    "[id*='price']",
-    ".price",
-    "span[class*='price']",
-  ];
+  const priceSelectors = "span.ux-textspans";
 
+/*   let priceElement = null;
   for (const selector of priceSelectors) {
-    const priceElement = document.querySelector(selector);
+    priceElement = document.querySelector(selector);
+    // Reduced logging to prevent spam
+    // console.log(`[PokePrice] Price selector "${selector}":`, !!priceElement);
     if (priceElement) {
       const priceText = priceElement.textContent.trim();
-      const priceMatch = priceText.match(/\$([0-9,]+\.?[0-9]*)/);
-      if (priceMatch) {
-        costs.price = parseFloat(priceMatch[1].replace(/,/g, ""));
+      console.log("PRICETEXT: ", priceText);
+      console.log("parsefloat: ", parseFloat(priceText));
+      if(parseFloat(priceText) != NaN){
         break;
       }
     }
+  } */
+  const elements = document.querySelectorAll(priceSelectors);
+  let i = 0;
+  
+  while(i < elements.length){
+    priceElement = elements[i];
+    console.log("PRICEELEMENT: ", priceElement);
+    priceText = priceElement.textContent.trim();
+    priceMatch = priceText.match(/\d+\.\d{2}/);
+    if(priceMatch != null){
+      console.log("parsefloat: ", priceMatch[0]);
+    }
+    console.log('PRICEMATCH: ', priceMatch);
+    if(priceMatch != null && !isNaN(parseFloat(priceMatch[0].replace(/,/g, ""))) && (priceElement.textContent.trim()).includes("US")){
+      break;
+    }
+    i++;
+  }
+
+  if (priceElement) {
+    costs.price = parseFloat(priceMatch[0].replace(/,/g, ""));
+    } else {
+    console.log("[PokePrice] No price element found");
   }
 
   // Look for shipping on item page
   const shippingSelectors = [
+    "span.ux-textspans.ux-textspans--POSITIVE.ux-textspans--BOLD",
     "[class*='shipping']",
     "[class*='delivery']",
     "[id*='shipping']",
     "[id*='delivery']",
   ];
 
+  let shippingElement = null;
+  let foundShippingText = "";
+
   for (const selector of shippingSelectors) {
     const elements = document.querySelectorAll(selector);
+    // Reduced shipping selector logging to prevent spam
+    // console.log(`[PokePrice] Shipping selector "${selector}": found ${elements.length} elements`);
+
     for (const element of elements) {
       const text = element.textContent.trim();
-      if (text.toLowerCase().includes("free")) {
-        costs.shipping = 0;
+      // console.log(`[PokePrice] Checking element text: "${text}"`);
+
+      if (
+        text.toLowerCase().includes("delivery") ||
+        text.match(/\+?\$[0-9,]+\.?[0-9]*/)
+      ) {
+        // console.log(`[PokePrice] Found shipping text: "${text}"`);
+        shippingElement = element;
+        foundShippingText = text;
         break;
-      } else {
-        const shippingMatch = text.match(/\+?\$([0-9,]+\.?[0-9]*)/);
-        if (shippingMatch) {
-          costs.shipping = parseFloat(shippingMatch[1].replace(/,/g, ""));
-          break;
-        }
       }
     }
-    if (costs.shipping > 0) break;
+
+    if (shippingElement) break;
+  }
+
+  if (shippingElement) {
+    console.log("[PokePrice] Final shipping element text:", foundShippingText);
+    if (foundShippingText.toLowerCase().startsWith("free delivery")) {
+      costs.shipping = 0;
+      console.log("[PokePrice] Free delivery detected");
+    } else {
+      const shippingMatch = foundShippingText.match(/\$([0-9,]+\.?[0-9]*)/);
+      if (shippingMatch) {
+        costs.shipping = parseFloat(shippingMatch[1].replace(/,/g, ""));
+        // console.log("[PokePrice] Extracted shipping:", costs.shipping);
+      }
+    }
+
+  } else {
+    // console.log("[PokePrice] No shipping element found");
   }
 
   // Calculate tax and total
