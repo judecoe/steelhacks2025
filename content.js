@@ -868,14 +868,16 @@ function extractItemPageCosts() {
       }
     }
   } */
-  
-  while(true){
-    priceElement = document.querySelector(priceSelectors);
+  const elements = document.querySelectAll(priceSelectors);
+  let i = 0;
+  while(i < elements.length){
+    const priceElement = elements[i];
     console.log("PRICEELEMENT: ", priceElement);
     console.log("parsefloat: ", parseFloat(priceElement.textContent.trim()));
     if(!isNaN(parseFloat(priceElement.textContent.trim()))){
       break;
     }
+    i++;
   }
 
   if (priceElement) {
