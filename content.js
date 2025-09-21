@@ -172,11 +172,15 @@ function extractCostDetails(listing) {
     const elements = listing.querySelectorAll(selector);
     // Reduced shipping selector logging to prevent spam
     // console.log(`[PokePrice] Shipping selector "${selector}": found ${elements.length} elements`);
-
+    check = false;
     for (const element of elements) {
       const text = element.textContent.trim();
       console.log(`[PokePrice] Checking element text: "${text}"`);
       if(text.toLowerCase().includes('was')){
+        check = true;
+        continue;
+      }else if(check == true){
+        check = false;
         continue;
       }else if(
         text.toLowerCase().includes("delivery") ||
