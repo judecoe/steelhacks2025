@@ -852,23 +852,9 @@ function extractItemPageCosts() {
   };
 
   // Look for price on item page
-  const priceSelectors = [
-    "span.ux-textspans",
-    "span.su-styled-text.primary.bold.large-1.s-card__price",
-    ".s-item__price",
-    ".notranslate",
-    "span[class*='price']",
-    "span[class*='su-styled-text'][class*='primary']",
-    ".s-item__detail--primary",
-    ".price-current",
-    ".display-price",
-    ".notranslate",
-    "[id*='price']",
-    ".price",
-    "span[class*='price']",
-  ];
+  const priceSelectors = "span.ux-textspans";
 
-  let priceElement = null;
+/*   let priceElement = null;
   for (const selector of priceSelectors) {
     priceElement = document.querySelector(selector);
     // Reduced logging to prevent spam
@@ -880,6 +866,15 @@ function extractItemPageCosts() {
       if(parseFloat(priceText) != NaN){
         break;
       }
+    }
+  } */
+  
+  while(true){
+    priceElement = document.querySelector(priceSelectors);
+    console.log("PRICEELEMENT: ", priceElement);
+    console.log("parsefloat: ", parseFloat(priceElement.textContent.trim()));
+    if(parseFloat(priceElement.textContent.trim()) != NaN){
+      break;
     }
   }
 
