@@ -878,7 +878,7 @@ function extractItemPageCosts() {
     priceText = priceElement.textContent.trim();
     priceMatch = priceText.match(/(\w+)$([0-9,]+\.?[0-9]*)/);
     console.log('PRICEMATCH: ', priceMatch);
-    if(priceMatch != Null && !isNaN(parseFloat(priceMatch[2].replace(/,/g, ""))) && (priceElement.textContent.trim()).includes("US")){
+    if(priceMatch != null && !isNaN(parseFloat(priceMatch[2].replace(/,/g, ""))) && (priceElement.textContent.trim()).includes("US")){
       break;
     }
     i++;
