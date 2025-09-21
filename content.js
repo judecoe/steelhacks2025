@@ -868,7 +868,7 @@ function extractItemPageCosts() {
       }
     }
   } */
-  const elements = document.querySelectAll(priceSelectors);
+  const elements = document.querySelectorAll(priceSelectors);
   let i = 0;
   while(i < elements.length){
     const priceElement = elements[i];
