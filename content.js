@@ -200,7 +200,7 @@ function extractCostDetails(listing) {
           text.toLowerCase().includes("shipping") ||
           text.match(/\+?\$[0-9,]+\.?[0-9]*/) ||
           text.toLowerCase().includes("free delivery")) && 
-          ! text.toLowerCase().includes("was");
+          ! text.toLowerCase().includes("was")
 
         ) {
           // console.log(`[PokePrice] Found shipping text: "${text}"`);
