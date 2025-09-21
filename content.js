@@ -784,10 +784,10 @@ function processItemPage() {
   chrome.runtime.sendMessage({ title, year: null, originalTitle: null }, (response) => {
     if (chrome.runtime.lastError) return;
 
-    const pcCostNum = response?.price ? parseFloat(response.price) : NaN;
+    const pcCostNum = response && response.price ? parseFloat(response.price) : NaN;
     const ebayTotal = Number(costs?.total) || 0;
 
-    if (!isNaN(pcCostNum)) {
+    if (pcCostNum && !isNaN(pcCostNum)) {
       const color = getColorGradient(ebayTotal, pcCostNum);
 
       let priceTag = itemContainer.querySelector(".pokeprice-tag");
