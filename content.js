@@ -55,11 +55,13 @@ function injectPokePriceStyles() {
       justify-content: flex-end;  /* push both to the right side */
     }
     .pokeprice-item-page-container .pokeprice-tag {
+      order: 1;
       position: relative !important;
       right: auto;
       bottom: auto;
     }
     .pokeprice-item-page-container .pokeprice-cost-box {
+      order: 2;
       position: relative !important;
       right: auto;
       bottom: auto;
