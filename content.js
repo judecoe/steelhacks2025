@@ -703,7 +703,6 @@ function processAllListings() {
 function processItemPage() {
   const itemContainer = document.createElement("div");
   itemContainer.className = "pokeprice-item-page-container";
-  itemContainer.style.position = "relative";
 
   const mainContent =
     document.querySelector("#mainContent") ||
