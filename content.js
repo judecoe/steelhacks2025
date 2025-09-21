@@ -176,13 +176,13 @@ function extractCostDetails(listing) {
     for (const element of elements) {
       const text = element.textContent.trim();
       // console.log(`[PokePrice] Checking element text: "${text}"`);
-
-      if (
+      if(text.toLowerCase().includes('was')){
+        continue;
+      }else if(
         text.toLowerCase().includes("delivery") ||
         text.toLowerCase().includes("shipping") ||
         text.match(/\+?\$[0-9,]+\.?[0-9]*/) ||
-        text.toLowerCase().includes("free delivery") && 
-        ! text.toLowerCase().includes("was")
+        text.toLowerCase().includes("free delivery")
       ) {
         // console.log(`[PokePrice] Found shipping text: "${text}"`);
         shippingElement = element;
