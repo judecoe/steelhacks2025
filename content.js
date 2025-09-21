@@ -213,7 +213,7 @@ function extractCostDetails(listing) {
 
     if (shippingElement) break;
   }
-}
+
 
   if (shippingElement) {
     console.log("[PokePrice] Final shipping element text:", foundShippingText);
