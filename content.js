@@ -65,6 +65,7 @@ function injectPokePriceStyles() {
       position: relative !important;
       right: auto;
       bottom: auto;
+      margin-left: 25px
     }
   `;
   document.head.appendChild(style);
