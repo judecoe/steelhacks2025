@@ -870,11 +870,12 @@ function extractItemPageCosts() {
   } */
   const elements = document.querySelectorAll(priceSelectors);
   let i = 0;
+  
   while(i < elements.length){
-    const priceElement = elements[i];
+    priceElement = elements[i];
     console.log("PRICEELEMENT: ", priceElement);
     console.log("parsefloat: ", parseFloat(priceElement.textContent.trim()));
-    if(!isNaN(parseFloat(priceElement.textContent.trim()))){
+    if(!isNaN(parseFloat(priceElement.textContent.trim())) && priceElement.includes("US")){
       break;
     }
     i++;
