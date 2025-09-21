@@ -6,7 +6,7 @@ function injectPokePriceStyles() {
     .pokeprice-tag {
       position: absolute !important;
       right: 10px;
-      bottom: 35px;
+      bottom: 45px;
       padding: 3px 8px;
       font-size: 13px;
       font-weight: bold;
@@ -19,7 +19,7 @@ function injectPokePriceStyles() {
     .pokeprice-cost-box {
       position: absolute !important;
       right: 10px;
-      bottom: 5px;
+      bottom: 10px;
       background: rgba(255,255,255,0.95);
       border: 1px solid #ddd;
       padding: 6px 8px;
