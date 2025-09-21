@@ -154,7 +154,7 @@ function extractCostDetails(listing) {
     const priceMatches = priceText.match(/\$([0-9,]+\.?[0-9]*)/g);
     if (priceMatches) {
       const prices = priceMatches.map(p => parseFloat(p.replace(/[^0-9.]/g, "")));
-      costs.price = Math.min(...prices);
+      costs.price = Math.max(...prices);
     }
   } else {
     console.log("[PokePrice] No price element found");
