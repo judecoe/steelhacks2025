@@ -584,7 +584,7 @@ function processListing(listing, idx) {
     }
   );
 
-  // --- Clean up title for second query (normalized) ---
+  /* // --- Clean up title for second query (normalized) ---
   const yearMatch = title.match(/\d{4}/);
   const year = yearMatch ? yearMatch[0] : null;
 
@@ -596,7 +596,7 @@ function processListing(listing, idx) {
   // Only add PSA 10 if it's not already there
   if (!/psa\s*10/i.test(cleaned)) {
     cleaned += " PSA 10";
-  }
+  } */
 
   // Reduced logging since we have summary view
   // console.log("[PokePrice] ===== FINAL SEARCH TERM =====");
