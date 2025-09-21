@@ -139,10 +139,7 @@ function extractCostDetails(listing) {
     // Reduced logging to prevent spam
     // console.log(`[PokePrice] Price selector "${selector}":`, !!priceElement);
     if (priceElement) {
-      // console.log(
-      //   `[PokePrice] Found price element:`,
-      //   priceElement.textContent.trim()
-      // );
+
       break;
     }
   }
@@ -150,6 +147,7 @@ function extractCostDetails(listing) {
   if (priceElement) {
     priceText = priceElement.textContent.trim();
     priceMatch = priceText.match(/\d+\.\d{2}/);
+    console.log("PRICEMATCH: ", priceMatch);
     costs.price = parseFloat(priceMatch[0].replace(/,/g, ""))
   }  else {
     console.log("[PokePrice] No price element found");
