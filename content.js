@@ -55,9 +55,15 @@ function injectPokePriceStyles() {
       justify-content: flex-end;  /* push both to the right side */
     }
     .pokeprice-item-page-container .pokeprice-tag {
+      position: relative !important;
+      right: auto;
+      bottom: auto;
       margin-right: 10px;
     }
     .pokeprice-item-page-container .pokeprice-cost-box {
+      position: relative !important;
+      right: auto;
+      bottom: auto;
     }
   `;
   document.head.appendChild(style);
