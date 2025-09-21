@@ -8,7 +8,7 @@ function injectPokePriceStyles() {
       right: 10px;
       bottom: 100px;
       padding: 5px 10px;
-      font-size: 15px;
+      font-size: 14px;
       font-weight: bold;
       border-radius: 6px;
       z-index: 10;
@@ -23,7 +23,7 @@ function injectPokePriceStyles() {
       background: rgba(255,255,255,0.95);
       border: 1px solid #ddd;
       padding: 6px 10px;
-      font-size: 15px;
+      font-size: 14px;
       border-radius: 6px;
       z-index: 10;
       box-shadow: 0 1px 4px rgba(0,0,0,0.12);
@@ -55,12 +55,16 @@ function injectPokePriceStyles() {
       justify-content: flex-end;  /* push both to the right side */
     }
     .pokeprice-item-page-container .pokeprice-tag {
+      font-size: 15px;
       order: 1;
       position: relative !important;
       right: auto;
       bottom: auto;
     }
     .pokeprice-item-page-container .pokeprice-cost-box {
+      padding: 6px 10px;
+      font-size: 15px;
+      border-radius: 6px;
       order: 2;
       position: relative !important;
       right: auto;
