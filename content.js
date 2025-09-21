@@ -150,7 +150,7 @@ function extractCostDetails(listing) {
   if (priceElement) {
     priceText = priceElement.textContent.trim();
     priceMatch = priceText.match(/\d+\.\d{2}/);
-    costs.price = priceMatch[0]; 
+    costs.price = parseFloat(priceMatch[0].replace(/,/g, ""))
   }  else {
     console.log("[PokePrice] No price element found");
   }
@@ -882,9 +882,7 @@ function extractItemPageCosts() {
   }
 
   if (priceElement) {
-    priceText = priceElement.textContent.trim();
-    priceMatch = priceText.match(/\d+\.\d{2}/);
-    costs.price = priceMatch[0];
+    costs.price = parseFloat(priceMatch[0].replace(/,/g, ""));
     } else {
     console.log("[PokePrice] No price element found");
   }
