@@ -6,11 +6,11 @@ function injectPokePriceStyles() {
     .pokeprice-tag {
       position: absolute !important;
       right: 10px;
-      bottom: 45px;
-      padding: 3px 8px;
-      font-size: 13px;
+      bottom: 55px;
+      padding: 5px 10px;
+      font-size: 15px;
       font-weight: bold;
-      border-radius: 4px;
+      border-radius: 6px;
       z-index: 10;
       box-shadow: 0 1px 4px rgba(0,0,0,0.12);
       pointer-events: none;
@@ -23,7 +23,7 @@ function injectPokePriceStyles() {
       background: rgba(255,255,255,0.95);
       border: 1px solid #ddd;
       padding: 6px 10px;
-      font-size: 13px;
+      font-size: 15px;
       border-radius: 6px;
       z-index: 10;
       box-shadow: 0 1px 4px rgba(0,0,0,0.12);
