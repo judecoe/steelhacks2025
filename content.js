@@ -47,8 +47,8 @@ function injectPokePriceStyles() {
     }
     .pokeprice-item-page-container {
       position: absolute !important;
-      top: 150px;
-      right: 310px;
+      top: 160px;
+      right: 250px;
       z-index: 1000;
       display: flex;              /* line up children horizontally */
       align-items: center;        /* vertically center them */
@@ -58,7 +58,6 @@ function injectPokePriceStyles() {
       position: relative !important;
       right: auto;
       bottom: auto;
-      margin-right: 10px;
     }
     .pokeprice-item-page-container .pokeprice-cost-box {
       position: relative !important;
