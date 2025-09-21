@@ -239,7 +239,7 @@ function createCostBreakdownBox(listing, costs, isPlaceholder = false) {
     costBox.innerHTML = `
       <div class="pokeprice-cost-total">
         <span>Total:</span>
-        <span>$${costs.total.toFixed(2)}</span>
+        <span>$${(costs.total).toFixed(2)}</span>
       </div>
     `;
   }
