@@ -55,19 +55,12 @@ function injectPokePriceStyles() {
       justify-content: flex-end;  /* push both to the right side */
     }
     .pokeprice-item-page-container .pokeprice-tag {
-      padding: 5px 10px;
-      font-size: 15px;
-      font-weight: bold;
-      border-radius: 6px;
       order: 1;
       position: relative !important;
       right: auto;
       bottom: auto;
     }
     .pokeprice-item-page-container .pokeprice-cost-box {
-      padding: 6px 10px;
-      font-size: 15px;
-      border-radius: 6px;
       order: 2;
       position: relative !important;
       right: auto;
