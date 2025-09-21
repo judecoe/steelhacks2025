@@ -22,9 +22,9 @@ function injectPokePriceStyles() {
       bottom: 10px;
       background: rgba(255,255,255,0.95);
       border: 1px solid #ddd;
-      padding: 6px 8px;
-      font-size: 11px;
-      border-radius: 4px;
+      padding: 6px 10px;
+      font-size: 13px;
+      border-radius: 6px;
       z-index: 10;
       box-shadow: 0 1px 4px rgba(0,0,0,0.12);
       pointer-events: none;
@@ -65,7 +65,7 @@ function injectPokePriceStyles() {
       bottom: auto;
     }
     .pokeprice-item-page-container .pokeprice-cost-box {
-      padding: 5px 10px;
+      padding: 6px 10px;
       font-size: 15px;
       border-radius: 6px;
       order: 2;
